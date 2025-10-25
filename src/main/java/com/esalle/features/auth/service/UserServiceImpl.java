@@ -4,6 +4,9 @@ import com.esalle.features.auth.domain.User;
 import com.esalle.features.auth.repository.UserRepository;
 import com.esalle.features.auth.repository.UserRepositoryImpl;
 import com.esalle.shared.exception.BusinessException;
+import com.esalle.shared.service.NotificationService;
+import com.esalle.shared.service.NotificationServiceImpl;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,9 +15,11 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
     
     private final UserRepository userRepository;
+    private final NotificationServiceImpl notificationService;
     
     public UserServiceImpl() {
         this.userRepository = new UserRepositoryImpl();
+        this.notificationService = new NotificationServiceImpl();
     }
     
     @Override
@@ -31,7 +36,15 @@ public class UserServiceImpl implements UserService {
         
         User savedUser = userRepository.save(user);
         
-        // TODO: Envoyer notification à l'admin (Email + WhatsApp)
+        // Envoyer notification à l'admin
+        String userName = savedUser.getPrenom() + " " + savedUser.getNom();
+        String userRole = savedUser.getRole().toString();
+        notificationService.notifyAdminNewRegistration(
+            "admin@ensaa.ma", 
+            null, // TODO: Ajouter numéro WhatsApp admin
+            userName, 
+            userRole
+        );
         
         return savedUser;
     }
@@ -111,7 +124,13 @@ public class UserServiceImpl implements UserService {
         
         User updatedUser = userRepository.save(user);
         
-        // TODO: Envoyer notification au user (Email + WhatsApp)
+        // Envoyer notification au user
+        String userName = updatedUser.getPrenom() + " " + updatedUser.getNom();
+        notificationService.notifyUserAccountApproved(
+            updatedUser.getEmail(),
+            null, // TODO: Ajouter champ téléphone dans User
+            userName
+        );
         
         return updatedUser;
     }
@@ -127,7 +146,13 @@ public class UserServiceImpl implements UserService {
         
         User updatedUser = userRepository.save(user);
         
-        // TODO: Envoyer notification au user (Email + WhatsApp)
+        // Envoyer notification au user
+        String userName = updatedUser.getPrenom() + " " + updatedUser.getNom();
+        notificationService.notifyUserAccountRefused(
+            updatedUser.getEmail(),
+            null, // TODO: Ajouter champ téléphone dans User
+            userName
+        );
         
         return updatedUser;
     }
@@ -152,17 +177,13 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll();
     }
     
-    // Méthodes utilitaires (TODO: améliorer avec BCrypt en production)
+    // Méthodes utilitaires - BCrypt
     private String hashPassword(String password) {
-        // TODO: Utiliser BCrypt pour hasher le mot de passe
-        // Pour l'instant, on retourne le mot de passe en clair (TEMPORAIRE !)
-        return password;
+        return BCrypt.hashpw(password, BCrypt.gensalt(12));
     }
     
     private boolean checkPassword(String raw, String hashed) {
-        // TODO: Utiliser BCrypt pour vérifier le mot de passe
-        // Pour l'instant, on compare en clair (TEMPORAIRE !)
-        return raw.equals(hashed);
+        return BCrypt.checkpw(raw, hashed);
     }
 }
 
