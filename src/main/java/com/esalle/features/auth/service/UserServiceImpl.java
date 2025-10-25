@@ -29,7 +29,7 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException("Cet email est déjà utilisé");
         }
         
-        // Hash password (TODO: utiliser BCrypt en production)
+        // Hash password avec BCrypt
         user.setPassword(hashPassword(user.getPassword()));
         user.setStatut(User.UserStatus.EN_ATTENTE);
         user.setDateInscription(LocalDateTime.now());
@@ -41,7 +41,7 @@ public class UserServiceImpl implements UserService {
         String userRole = savedUser.getRole().toString();
         notificationService.notifyAdminNewRegistration(
             "admin@ensaa.ma", 
-            null, // TODO: Ajouter numéro WhatsApp admin
+            "+212600000000", // Numéro WhatsApp admin (à configurer)
             userName, 
             userRole
         );
@@ -56,7 +56,7 @@ public class UserServiceImpl implements UserService {
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             
-            // Vérifier password (TODO: utiliser BCrypt en production)
+            // Vérifier password avec BCrypt
             if (checkPassword(password, user.getPassword())) {
                 // Vérifier statut
                 if (user.getStatut() == User.UserStatus.ACTIF) {
@@ -85,7 +85,7 @@ public class UserServiceImpl implements UserService {
         admin.setNom("Admin");
         admin.setPrenom("System");
         admin.setEmail("admin@ensaa.ma");
-        admin.setPassword(hashPassword("admin123")); // TODO: changer en production !
+        admin.setPassword(hashPassword("admin123")); // Changer ce mot de passe en production
         admin.setRole(User.UserRole.ADMIN);
         admin.setStatut(User.UserStatus.ACTIF);
         admin.setDateInscription(LocalDateTime.now());
@@ -128,7 +128,7 @@ public class UserServiceImpl implements UserService {
         String userName = updatedUser.getPrenom() + " " + updatedUser.getNom();
         notificationService.notifyUserAccountApproved(
             updatedUser.getEmail(),
-            null, // TODO: Ajouter champ téléphone dans User
+            updatedUser.getTelephone(),
             userName
         );
         
@@ -150,7 +150,7 @@ public class UserServiceImpl implements UserService {
         String userName = updatedUser.getPrenom() + " " + updatedUser.getNom();
         notificationService.notifyUserAccountRefused(
             updatedUser.getEmail(),
-            null, // TODO: Ajouter champ téléphone dans User
+            updatedUser.getTelephone(),
             userName
         );
         

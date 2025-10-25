@@ -115,6 +115,7 @@ public class AuthServlet extends HttpServlet {
             String nom = request.getParameter("nom");
             String prenom = request.getParameter("prenom");
             String email = request.getParameter("email");
+            String telephone = request.getParameter("telephone");
             String password = request.getParameter("password");
             String passwordConfirm = request.getParameter("passwordConfirm");
             String roleStr = request.getParameter("role");
@@ -137,6 +138,9 @@ public class AuthServlet extends HttpServlet {
             user.setNom(nom.trim());
             user.setPrenom(prenom.trim());
             user.setEmail(email.trim().toLowerCase());
+            if (telephone != null && !telephone.trim().isEmpty()) {
+                user.setTelephone(telephone.trim());
+            }
             user.setPassword(password);
             user.setRole(User.UserRole.valueOf(roleStr));
             
@@ -144,8 +148,6 @@ public class AuthServlet extends HttpServlet {
             User savedUser = userService.register(user);
             
             log("New user registered: " + savedUser.getEmail() + " (Role: " + savedUser.getRole() + ")");
-            
-            // TODO: Envoyer notification à l'admin
             
             // Rediriger vers login avec message de succès
             request.setAttribute("success", 
@@ -160,6 +162,7 @@ public class AuthServlet extends HttpServlet {
             request.setAttribute("nom", request.getParameter("nom"));
             request.setAttribute("prenom", request.getParameter("prenom"));
             request.setAttribute("email", request.getParameter("email"));
+            request.setAttribute("telephone", request.getParameter("telephone"));
             request.setAttribute("role", request.getParameter("role"));
             
             showRegisterPage(request, response);

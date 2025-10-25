@@ -81,6 +81,24 @@
                     >
                 </div>
 
+                <!-- Téléphone -->
+                <div>
+                    <label for="telephone" class="block text-sm font-medium text-gray-700 mb-2">
+                        Téléphone (optionnel)
+                    </label>
+                    <input 
+                        type="tel" 
+                        id="telephone" 
+                        name="telephone" 
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
+                        placeholder="+212600000000"
+                        value="${telephone}"
+                    >
+                    <p class="mt-1 text-xs text-gray-500">
+                        Pour recevoir les notifications WhatsApp
+                    </p>
+                </div>
+
                 <!-- Rôle -->
                 <div>
                     <label for="role" class="block text-sm font-medium text-gray-700 mb-2">

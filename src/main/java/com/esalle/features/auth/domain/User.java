@@ -25,6 +25,9 @@ public class User {
     @Column(nullable = false, unique = true, length = 150)
     private String email;
     
+    @Column(name = "telephone", length = 20)
+    private String telephone;
+    
     @NotBlank(message = "Le mot de passe est obligatoire")
     @Column(nullable = false)
     private String password;
@@ -87,6 +90,14 @@ public class User {
     
     public void setEmail(String email) {
         this.email = email;
+    }
+    
+    public String getTelephone() {
+        return telephone;
+    }
+    
+    public void setTelephone(String telephone) {
+        this.telephone = telephone;
     }
     
     public String getPassword() {
