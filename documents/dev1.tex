@@ -1,0 +1,404 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{longtable}
+
+\geometry{top=2cm, bottom=2cm, left=2.5cm, right=2.5cm}
+
+\titleformat{\section}
+{\normalfont\Large\bfseries\color{blue!70!black}}{\thesection}{1em}{}
+
+\titleformat{\subsection}
+{\normalfont\large\bfseries\color{blue!50!black}}{\thesubsection}{1em}{}
+
+\title{\textbf{Guide Développeur 1\\E-Salle ENSAA}}
+\author{Académique + Opérations Simples}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Vue d'Ensemble - Développeur 1}
+
+\subsection{Votre Mission}
+
+Vous êtes responsable des \textbf{fondations académiques} et des \textbf{opérations simples} du système E-Salle ENSAA.
+
+\textbf{Vos 4 modules :}
+\begin{enumerate}
+    \item \textbf{Auth \& Users} (5 jours) - Semaine 1
+    \item \textbf{Salle} (6 jours) - Semaine 2
+    \item \textbf{Filière} (6 jours) - Semaine 3
+    \item \textbf{Réclamation} (6 jours) - Semaine 4
+\end{enumerate}
+
+\textbf{Total :} 23 jours de développement pur + 6 jours d'aide à Dev2 (Semaines 5-6)
+
+\subsection{Avantages de Votre Position}
+
+\begin{itemize}
+    \item ✅ \textbf{Aucune dépendance externe} : Vous pouvez commencer immédiatement après Semaine 0
+    \item ✅ \textbf{Modules complets} : Backend + Frontend pour chaque module
+    \item ✅ \textbf{Travail indépendant} : Pas de blocage, pas d'attente
+    \item ✅ \textbf{Terminez plus tôt} : Vous aidez Dev2 sur les modules complexes (Emploi, Réservation)
+\end{itemize}
+
+\newpage
+
+\section{Vos Modules en Détail}
+
+\subsection{Module 1 : Auth \& Users (Semaine 1 - 5 jours)}
+
+\textbf{Objectif :} Créer le système d'authentification et de gestion des utilisateurs avec table unique et rôles.
+
+\textbf{Entités :}
+\begin{itemize}
+    \item \texttt{User} : id, nom, prenom, email, password, role (ADMIN/COORDINATEUR/PROFESSEUR/MEMBRE\_CLUB), statut (EN\_ATTENTE/ACTIF/REFUSE), filiere\_id, nom\_club, date\_inscription, date\_approbation, approved\_by
+\end{itemize}
+
+\textbf{Fonctionnalités :}
+\begin{enumerate}
+    \item \textbf{Inscription} : Formulaire (nom, prenom, email, password, role) → Statut = EN\_ATTENTE
+    \item \textbf{Login} : Email + Password → Session
+    \item \textbf{Compte Admin auto-créé} : Au démarrage de l'application
+    \item \textbf{Service Notifications} : Email + WhatsApp (méthode générique)
+\end{enumerate}
+
+\textbf{Règles métier :}
+\begin{itemize}
+    \item Email unique
+    \item Password hashé (BCrypt)
+    \item Statut par défaut = EN\_ATTENTE
+    \item Admin créé automatiquement au premier lancement
+\end{itemize}
+
+\textbf{Fichiers à créer :}
+\begin{itemize}
+    \item \texttt{User.java} (domain)
+    \item \texttt{UserRepository.java + UserRepositoryImpl.java}
+    \item \texttt{UserService.java + UserServiceImpl.java}
+    \item \texttt{AuthServlet.java} (login/logout)
+    \item \texttt{RegisterServlet.java} (inscription)
+    \item \texttt{NotificationService.java} (Email + WhatsApp)
+    \item \texttt{login.jsp}, \texttt{register.jsp}
+\end{itemize}
+
+\subsection{Module 2 : Salle (Semaine 2 - 6 jours)}
+
+\textbf{Objectif :} CRUD complet pour la gestion des salles avec types et capacités.
+
+\textbf{Entités :}
+\begin{itemize}
+    \item \texttt{Salle} : id, nom, type (COURS/TP/TD), capacite, equipements, disponible
+\end{itemize}
+
+\textbf{Fonctionnalités :}
+\begin{enumerate}
+    \item \textbf{CRUD complet} : Créer, Lire, Modifier, Supprimer
+    \item \textbf{Filtres} : Par type, par capacité minimale, par disponibilité
+    \item \textbf{Recherche} : Par nom
+\end{enumerate}
+
+\textbf{Règles métier :}
+\begin{itemize}
+    \item Nom unique
+    \item Capacité > 0
+    \item Type obligatoire (COURS, TP, TD)
+    \item Salles TP bloquées pour clubs (géré dans Réservation par Dev2)
+\end{itemize}
+
+\textbf{Fichiers à créer :}
+\begin{itemize}
+    \item \texttt{Salle.java} (domain)
+    \item \texttt{SalleRepository.java + SalleRepositoryImpl.java}
+    \item \texttt{SalleService.java + SalleServiceImpl.java}
+    \item \texttt{SalleServlet.java}
+    \item \texttt{list.jsp}, \texttt{form.jsp}, \texttt{view.jsp} (dans \texttt{views/salle/})
+\end{itemize}
+
+\subsection{Module 3 : Filière (Semaine 3 - 6 jours)}
+
+\textbf{Objectif :} Gestion des filières avec cycles (Préparatoire/Ingénieur) et années.
+
+\textbf{Entités :}
+\begin{itemize}
+    \item \texttt{Filiere} : id, nom, cycle (PREPARATOIRE/INGENIEUR), annee (1/2/3), effectif, coordinateur\_id
+\end{itemize}
+
+\textbf{Fonctionnalités :}
+\begin{enumerate}
+    \item \textbf{CRUD complet} : Créer, Lire, Modifier, Supprimer
+    \item \textbf{Gestion cycles} : Préparatoire (2 ans), Ingénieur (3 ans - DLA1/DLA2/DLA3)
+    \item \textbf{Gestion effectifs} : Nombre d'étudiants par filière
+    \item \textbf{Assignation coordinateur} : Sélection d'un user avec role COORDINATEUR
+\end{enumerate}
+
+\textbf{Règles métier :}
+\begin{itemize}
+    \item Nom unique
+    \item Effectif > 0
+    \item Coordinateur doit avoir role = COORDINATEUR
+    \item Cycle PREPARATOIRE : années 1-2 uniquement
+    \item Cycle INGENIEUR : années 1-3 (DLA1, DLA2, DLA3)
+\end{itemize}
+
+\textbf{Fichiers à créer :}
+\begin{itemize}
+    \item \texttt{Filiere.java} (domain)
+    \item \texttt{FiliereRepository.java + FiliereRepositoryImpl.java}
+    \item \texttt{FiliereService.java + FiliereServiceImpl.java}
+    \item \texttt{FiliereServlet.java}
+    \item \texttt{list.jsp}, \texttt{form.jsp}, \texttt{view.jsp} (dans \texttt{views/filiere/})
+\end{itemize}
+
+\textbf{⚠️ IMPORTANT :} Dev2 attend que vous terminiez ce module (fin S3) pour commencer Matière !
+
+\subsection{Module 4 : Réclamation (Semaine 4 - 6 jours)}
+
+\textbf{Objectif :} Système de réclamations avec workflow et notifications.
+
+\textbf{Entités :}
+\begin{itemize}
+    \item \texttt{Reclamation} : id, user\_id, salle\_id, description, urgence (FAIBLE/MOYENNE/ELEVEE), statut (EN\_ATTENTE/TRAITEE), date\_creation, date\_traitement, traite\_par
+\end{itemize}
+
+\textbf{Fonctionnalités :}
+\begin{enumerate}
+    \item \textbf{Créer réclamation} : User sélectionne salle, décrit problème, choisit urgence
+    \item \textbf{Notification admin} : Email + WhatsApp à l'admin lors de création
+    \item \textbf{Traiter réclamation} : Admin marque comme TRAITEE
+    \item \textbf{Notification user} : Email + WhatsApp au user lors du traitement
+    \item \textbf{Consulter réclamations} : Liste pour admin et user
+\end{enumerate}
+
+\textbf{Règles métier :}
+\begin{itemize}
+    \item Statut par défaut = EN\_ATTENTE
+    \item Notification immédiate à l'admin lors de création
+    \item Notification au user lors du traitement
+    \item Urgence ELEVEE affichée en rouge dans l'UI
+\end{itemize}
+
+\textbf{Fichiers à créer :}
+\begin{itemize}
+    \item \texttt{Reclamation.java} (domain)
+    \item \texttt{ReclamationRepository.java + ReclamationRepositoryImpl.java}
+    \item \texttt{ReclamationService.java + ReclamationServiceImpl.java}
+    \item \texttt{ReclamationServlet.java}
+    \item \texttt{list.jsp}, \texttt{form.jsp}, \texttt{view.jsp} (dans \texttt{views/reclamation/})
+\end{itemize}
+
+\newpage
+
+\section{Stratégie Git/GitHub pour Dev1}
+
+\subsection{Configuration Initiale (Semaine 0)}
+
+\textbf{Branches principales :}
+\begin{itemize}
+    \item \texttt{main} : Production (ne JAMAIS push directement)
+    \item \texttt{develop} : Intégration (ne JAMAIS push directement)
+    \item \texttt{dev1} : VOTRE branche de travail
+\end{itemize}
+
+\textbf{Setup initial :}
+\begin{verbatim}
+git clone <repo-url>
+git checkout -b dev1
+git push -u origin dev1
+\end{verbatim}
+
+\subsection{Workflow Quotidien}
+
+\textbf{Chaque matin (avant de commencer) :}
+\begin{verbatim}
+git checkout dev1
+git pull origin develop  # Récupérer les changements de Dev2
+git pull origin dev1     # Récupérer vos propres changements
+\end{verbatim}
+
+\textbf{Pendant le développement :}
+\begin{verbatim}
+# Commits fréquents (2-3 fois par jour)
+git add .
+git commit -m "feat(auth): add user registration"
+git push origin dev1
+\end{verbatim}
+
+\textbf{Conventions de commit :}
+\begin{itemize}
+    \item \texttt{feat(module): description} - Nouvelle fonctionnalité
+    \item \texttt{fix(module): description} - Correction de bug
+    \item \texttt{refactor(module): description} - Refactoring
+    \item \texttt{docs(module): description} - Documentation
+\end{itemize}
+
+\textbf{Exemples pour vos modules :}
+\begin{verbatim}
+feat(auth): add user login
+feat(salle): add CRUD operations
+feat(filiere): add cycle management
+feat(reclamation): add notification system
+fix(auth): fix password hashing
+\end{verbatim}
+
+\subsection{Workflow Hebdomadaire}
+
+\textbf{Chaque vendredi (fin de semaine) :}
+
+\textbf{1. Préparer votre code :}
+\begin{verbatim}
+git checkout dev1
+git pull origin develop  # S'assurer d'avoir les derniers changements
+# Résoudre conflits si nécessaire
+git add .
+git commit -m "merge: integrate develop changes"
+git push origin dev1
+\end{verbatim}
+
+\textbf{2. Créer Pull Request (PR) :}
+\begin{itemize}
+    \item Aller sur GitHub
+    \item Créer PR : \texttt{dev1 → develop}
+    \item Titre : \texttt{[S1] Module Auth \& Users - Dev1}
+    \item Description : Lister les fonctionnalités ajoutées
+    \item Demander review à Dev2
+\end{itemize}
+
+\textbf{3. Après approbation :}
+\begin{itemize}
+    \item Merger la PR sur \texttt{develop}
+    \item Dev2 pourra utiliser votre code
+\end{itemize}
+
+\subsection{Points de Synchronisation Critiques}
+
+\textbf{Fin Semaine 1 :} Merger Auth \& Users → Dev2 en a besoin pour Administration
+
+\textbf{Fin Semaine 2 :} Merger Salle → Dev2 en a besoin pour Emploi du Temps
+
+\textbf{Fin Semaine 3 :} Merger Filière → Dev2 en a besoin pour Matière ⚠️ \textbf{CRITIQUE !}
+
+\textbf{Fin Semaine 4 :} Merger Réclamation → Vous avez terminé vos modules !
+
+\subsection{Gestion des Conflits}
+
+\textbf{Si conflit lors du pull :}
+\begin{verbatim}
+git pull origin develop
+# Git affiche les conflits
+# Ouvrir les fichiers en conflit
+# Chercher <<<<<<< HEAD
+# Choisir la bonne version ou combiner
+git add <fichiers-résolus>
+git commit -m "merge: resolve conflicts with develop"
+git push origin dev1
+\end{verbatim}
+
+\textbf{Conseil :} Communiquez avec Dev2 quotidiennement pour éviter les conflits !
+
+\subsection{Semaines 5-6 : Aide à Dev2}
+
+\textbf{Votre rôle :}
+\begin{itemize}
+    \item Aider Dev2 sur Emploi du Temps (S5) et Réservation (S6)
+    \item Faire des tests sur vos modules
+    \item Améliorer l'UI/UX
+    \item Corriger les bugs remontés
+\end{itemize}
+
+\textbf{Si vous aidez Dev2 sur sa branche :}
+\begin{verbatim}
+git checkout dev2
+git pull origin dev2
+# Faire vos modifications
+git add .
+git commit -m "feat(emploi): help with calendar UI"
+git push origin dev2
+\end{verbatim}
+
+\newpage
+
+\section{Checklist de Succès}
+
+\subsection{Pour Chaque Module}
+
+\textbf{Avant de merger :}
+\begin{itemize}
+    \item[$\square$] Entité créée avec annotations Hibernate
+    \item[$\square$] Repository implémenté (CRUD complet)
+    \item[$\square$] Service implémenté avec logique métier
+    \item[$\square$] Servlet créé avec toutes les routes
+    \item[$\square$] Pages JSP créées (list, form, view)
+    \item[$\square$] Validation des données (Bean Validation)
+    \item[$\square$] Gestion des erreurs (try-catch)
+    \item[$\square$] Tests manuels effectués
+    \item[$\square$] Code compilé sans erreur
+    \item[$\square$] Commit + Push sur dev1
+    \item[$\square$] PR créée vers develop
+\end{itemize}
+
+\subsection{Points de Synchronisation}
+
+\textbf{Fin Semaine 1 :}
+\begin{itemize}
+    \item[$\square$] Module Auth \& Users terminé et mergé
+    \item[$\square$] Dev2 peut commencer Administration
+\end{itemize}
+
+\textbf{Fin Semaine 2 :}
+\begin{itemize}
+    \item[$\square$] Module Salle terminé et mergé
+    \item[$\square$] Dev2 peut utiliser Salle dans Emploi du Temps
+\end{itemize}
+
+\textbf{Fin Semaine 3 :}
+\begin{itemize}
+    \item[$\square$] Module Filière terminé et mergé ⚠️ \textbf{CRITIQUE !}
+    \item[$\square$] Dev2 peut commencer Matière
+\end{itemize}
+
+\textbf{Fin Semaine 4 :}
+\begin{itemize}
+    \item[$\square$] Module Réclamation terminé et mergé
+    \item[$\square$] Tous vos modules sont terminés !
+\end{itemize}
+
+\subsection{Communication}
+
+\textbf{Quotidien :}
+\begin{itemize}
+    \item[$\square$] Standup 10 min avec Dev2 (matin)
+    \item[$\square$] Signaler tout blocage immédiatement
+\end{itemize}
+
+\textbf{Hebdomadaire :}
+\begin{itemize}
+    \item[$\square$] Revue de code croisée (vendredi)
+    \item[$\square$] PR mergée avant le weekend
+\end{itemize}
+
+\section{Conseils Pratiques}
+
+\begin{enumerate}
+    \item \textbf{Commencez simple :} CRUD basique d'abord, puis ajoutez la logique métier
+    \item \textbf{Testez souvent :} Lancez l'application après chaque fonctionnalité
+    \item \textbf{Commitez fréquemment :} 2-3 commits par jour minimum
+    \item \textbf{Respectez les deadlines :} Dev2 compte sur vous pour Filière (fin S3) !
+    \item \textbf{Communiquez :} Signalez tout problème immédiatement
+    \item \textbf{Aidez Dev2 :} Vous terminez plus tôt, profitez-en pour apprendre les modules complexes !
+\end{enumerate}
+
+\textbf{Bon développement ! 🚀}
+
+\end{document}
+

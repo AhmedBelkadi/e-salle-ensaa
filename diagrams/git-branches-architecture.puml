@@ -1,0 +1,55 @@
+@startuml Architecture des Branches Git
+!theme plain
+skinparam backgroundColor #FFFFFF
+
+title Architecture Git Simple - E-Salle ENSAA
+
+agent "main\n(Production)" as main #FF6B6B
+agent "develop\n(Intégration)" as develop #4ECDC4
+agent "dev1\n(Développeur 1)" as dev1 #FFE66D
+agent "dev2\n(Développeur 2)" as dev2 #95E1D3
+
+develop --> main : Merge PR\n(Fin projet)
+dev1 --> develop : Merge PR\n(Vendredi)
+dev2 --> develop : Merge PR\n(Vendredi)
+
+note right of main
+  **Production**
+  - Code stable
+  - Protected
+  - Merge uniquement fin projet
+end note
+
+note right of develop
+  **Intégration**
+  - Merge dev1 + dev2
+  - Protected
+  - Merge chaque vendredi
+end note
+
+note right of dev1
+  **Développeur 1**
+  - Salle, Filière, Matière
+  - Commits libres
+  - Pull develop chaque matin
+end note
+
+note right of dev2
+  **Développeur 2**
+  - Réclamation, Réservation, Emploi
+  - Commits libres
+  - Pull develop chaque matin
+end note
+
+legend bottom right
+  **Workflow Simple :**
+  
+  1. Matin : Pull develop
+  2. Journée : Code + Commit
+  3. Soir : Push
+  4. Vendredi : Pull Request → develop
+  5. Code review
+  6. Merge vers develop
+endlegend
+
+@enduml

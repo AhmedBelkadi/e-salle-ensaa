@@ -1,0 +1,118 @@
+@startuml Cycle Hebdomadaire Git
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam activityStyle rectangle
+
+title Cycle Hebdomadaire Git - E-Salle ENSAA\nWorkflow Simple pour 2 Développeurs
+
+start
+
+partition "LUNDI MATIN" {
+    :Dev1 et Dev2 se connectent;
+    
+    :Pull develop;
+    note right
+      git checkout dev1
+      git pull origin develop
+    end note
+    
+    :Planifier la semaine;
+    note right
+      - Quels modules cette semaine ?
+      - Fichiers partagés à modifier ?
+      - Points de synchronisation ?
+    end note
+}
+
+partition "MARDI - JEUDI (Travail Quotidien)" {
+    repeat
+        :Matin : Pull develop;
+        note right
+          git pull origin develop
+        end note
+        
+        :Coder sur son module;
+        
+        :Commit 2-3 fois par jour;
+        note right
+          git add .
+          git commit -m "feat(salle): Add form"
+        end note
+        
+        :Soir : Push;
+        note right
+          git push origin dev1
+        end note
+        
+    repeat while (Jeudi soir ?) is (Non)
+    ->Oui;
+}
+
+partition "VENDREDI (Intégration)" {
+    :Commit et push tout le travail;
+    
+    :Pull develop et résoudre conflits;
+    note right
+      git pull origin develop
+      # Résoudre conflits si nécessaire
+      git add .
+      git commit -m "merge: Resolve conflicts"
+    end note
+    
+    :Créer Pull Request vers develop;
+    note right
+      Sur GitHub :
+      - New Pull Request
+      - Base: develop ← Compare: dev1
+      - Titre: "Week X - Dev1 - Modules"
+      - Assigner Dev2 comme reviewer
+    end note
+    
+    :L'autre dev review la PR;
+    note right
+      - Lire le code
+      - Laisser commentaires
+      - Approuver ou demander changements
+    end note
+    
+    if (PR approuvée ?) then (Oui)
+        :Merger vers develop;
+        note right
+          Bouton "Merge" sur GitHub
+        end note
+    else (Non)
+        :Corriger selon commentaires;
+        :Re-push;
+        note right
+          git add .
+          git commit -m "fix: Address review comments"
+          git push origin dev1
+        end note
+    endif
+}
+
+partition "WEEKEND" {
+    :Repos ! 😊;
+}
+
+:Recommencer lundi;
+
+stop
+
+legend bottom right
+  **Points Clés :**
+  
+  ✅ Pull develop CHAQUE MATIN
+  ✅ Commit 2-3 fois PAR JOUR
+  ✅ Push CHAQUE SOIR
+  ✅ PR vers develop CHAQUE VENDREDI
+  ✅ Code review OBLIGATOIRE
+  
+  **Communication :**
+  💬 Parler avec l'autre dev
+  💬 Surtout pour fichiers partagés
+  💬 WhatsApp pour questions rapides
+endlegend
+
+@enduml
+

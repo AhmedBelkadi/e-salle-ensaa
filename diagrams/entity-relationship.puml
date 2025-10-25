@@ -1,0 +1,353 @@
+@startuml Diagramme Entité-Relation - E-Salle ENSAA
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam entityStyle rectangle
+
+title Diagramme Entité-Relation - E-Salle ENSAA (Architecture Unifiée v2.0)
+
+' ============ TABLE UTILISATEURS UNIFIÉE ============
+
+entity "Users" as Users {
+    * id : BIGINT <<PK>>
+    --
+    * nom : VARCHAR(100)
+    * prenom : VARCHAR(100)
+    * email : VARCHAR(255) <<UK>>
+    * password : VARCHAR(255)
+    * role : ENUM
+    * statut : ENUM
+    filiere_id : BIGINT <<FK>>
+    nom_club : VARCHAR(100)
+    telephone : VARCHAR(20)
+    * date_inscription : TIMESTAMP
+    date_approbation : TIMESTAMP
+    approved_by : BIGINT <<FK>>
+    * date_creation : TIMESTAMP
+    date_modification : TIMESTAMP
+}
+
+note right of Users
+  **TABLE UNIQUE pour tous les utilisateurs**
+  
+  **Rôles possibles :**
+  - ADMIN (Membre d'Administration)
+  - COORDINATEUR (Coordinateur de filière)
+  - PROFESSEUR
+  - MEMBRE_CLUB
+  
+  **Statuts :**
+  - EN_ATTENTE (après inscription)
+  - ACTIF (après approbation Admin)
+  - INACTIF (désactivé)
+  - REFUSE (inscription refusée)
+  
+  **Champs conditionnels :**
+  - filiere_id : NULL pour ADMIN et MEMBRE_CLUB
+  - nom_club : NULL sauf pour MEMBRE_CLUB
+  - approved_by : id du Membre Admin qui a approuvé
+  
+  **Compte Admin créé au démarrage !**
+end note
+
+' ============ PARCOURS ACADÉMIQUE (Développeur 1) ============
+
+entity "Filiere" as Filiere {
+    * id : BIGINT <<PK>>
+    --
+    * code : VARCHAR(10) <<UK>>
+    * nom : VARCHAR(100)
+    * cycle : ENUM
+    * annee : INTEGER
+    * effectif : INTEGER
+    * coordinateur_id : BIGINT <<FK>>
+    * actif : BOOLEAN
+    * date_creation : TIMESTAMP
+}
+
+note right of Filiere
+  **Développeur 1**
+  
+  **Cycles :**
+  - PREPARATOIRE (2 ans: CP1, CP2)
+  - INGENIEUR (3 ans par spécialité)
+  
+  **Exemples :**
+  - code: "CP", cycle: PREPARATOIRE, annee: 1 → CP1
+  - code: "DLA", cycle: INGENIEUR, annee: 1 → DLA1
+  - code: "GI", cycle: INGENIEUR, annee: 2 → GI2
+  
+  coordinateur_id → users(id) avec role=COORDINATEUR
+end note
+
+entity "Matiere" as Matiere {
+    * id : BIGINT <<PK>>
+    --
+    * code : VARCHAR(20) <<UK>>
+    * nom : VARCHAR(100)
+    * filiere_id : BIGINT <<FK>>
+    heures_cours : INTEGER
+    heures_td : INTEGER
+    heures_tp : INTEGER
+    * professeur_id : BIGINT <<FK>>
+    semestre : VARCHAR(10)
+    * date_creation : TIMESTAMP
+}
+
+note right of Matiere
+  **Développeur 1**
+  
+  Charges horaires par type :
+  - heures_cours (cours magistraux)
+  - heures_td (travaux dirigés)
+  - heures_tp (travaux pratiques)
+  
+  professeur_id → users(id) avec role=PROFESSEUR
+end note
+
+entity "EmploiDuTemps" as EmploiDuTemps {
+    * id : BIGINT <<PK>>
+    --
+    * filiere_id : BIGINT <<FK>>
+    * matiere_id : BIGINT <<FK>>
+    * salle_id : BIGINT <<FK>>
+    * professeur_id : BIGINT <<FK>>
+    * jour : VARCHAR(20)
+    * heure_debut : TIME
+    * heure_fin : TIME
+    * type_seance : ENUM
+    groupe : INTEGER
+    * date_debut_periode : DATE
+    * date_fin_periode : DATE
+    * recurrent : BOOLEAN
+    statut : VARCHAR(20)
+    * date_creation : TIMESTAMP
+}
+
+note right of EmploiDuTemps
+  **Développeur 1 - Module le plus complexe**
+  
+  **Création manuelle via interface calendrier**
+  avec onglets par année (DLA1, DLA2, DLA3)
+  
+  **Type séance :** COURS, TP, TD
+  
+  **Groupe (obligatoire pour TP/TD) :**
+  - groupe = 1 (Groupe 1)
+  - groupe = 2 (Groupe 2)
+  - groupe = NULL (pour COURS)
+  
+  **Périodes de 7 semaines**
+  Exemple : 01/09/2025 - 19/10/2025
+  
+  professeur_id → users(id) avec role=PROFESSEUR
+end note
+
+entity "Seance" as Seance {
+    * id : BIGINT <<PK>>
+    --
+    * emploi_temps_id : BIGINT <<FK>>
+    * date_seance : DATE
+    * heure_debut : TIME
+    * heure_fin : TIME
+    * salle_id : BIGINT <<FK>>
+    * statut : ENUM
+    * date_creation : TIMESTAMP
+}
+
+note right of Seance
+  **Développeur 1**
+  
+  Générées automatiquement depuis EmploiDuTemps
+  7 séances pour période de 7 semaines
+  
+  **Statuts :**
+  - PLANIFIEE (normale)
+  - LIBEREE_EXCEPTIONNELLE (libérée pour cette date)
+  - LIBEREE_DEFINITIVE (cours terminé)
+  - ANNULEE
+  - TERMINEE
+  
+  **IMPORTANT :** Vérifiée par module Réservation !
+end note
+
+entity "LiberationExceptionnelle" as Liberation {
+    * id : BIGINT <<PK>>
+    --
+    * seance_id : BIGINT <<FK>>
+    * professeur_id : BIGINT <<FK>>
+    motif : TEXT
+    * date_liberation : TIMESTAMP
+    notified_coordinateur : BOOLEAN
+    notified_admin : BOOLEAN
+}
+
+note right of Liberation
+  **Développeur 1**
+  
+  Libération d'UNE séance spécifique !
+  
+  Exemple :
+  - Prof libère lundi 15/10 seulement
+  - Autres lundis (22/10, 29/10) : BLOQUÉS
+  
+  Notifications Email + WhatsApp :
+  → Coordinateur de filière
+  → Membre d'Administration
+  
+  professeur_id → users(id) avec role=PROFESSEUR
+end note
+
+' ============ PARCOURS OPÉRATIONNEL (Développeur 2) ============
+
+entity "Reclamation" as Reclamation {
+    * id : BIGINT <<PK>>
+    --
+    * user_id : BIGINT <<FK>>
+    * salle_id : BIGINT <<FK>>
+    seance_id : BIGINT <<FK>>
+    * type_equipement : VARCHAR(50)
+    * description : TEXT
+    * urgence : ENUM
+    * statut : ENUM
+    * date_creation : TIMESTAMP
+    date_traitement : TIMESTAMP
+    commentaire_admin : TEXT
+}
+
+note right of Reclamation
+  **Développeur 2**
+  
+  Accessible par PROFESSEUR et MEMBRE_CLUB
+  
+  **Urgence :** FAIBLE, MOYEN, URGENT
+  **Statut :** EN_ATTENTE, TRAITEE
+  
+  **Workflow :**
+  1. Création → Notif Admin (Email + WhatsApp)
+  2. Traitement par Admin
+  3. Notif demandeur (Email + WhatsApp)
+  
+  user_id → users(id) (PROFESSEUR ou MEMBRE_CLUB)
+end note
+
+entity "Reservation" as Reservation {
+    * id : BIGINT <<PK>>
+    --
+    * salle_id : BIGINT <<FK>>
+    * date_reservation : DATE
+    * heure_debut : TIME
+    * heure_fin : TIME
+    * user_id : BIGINT <<FK>>
+    * role_demandeur : ENUM
+    matiere_id : BIGINT <<FK>>
+    motif : TEXT
+    * priorite : INTEGER
+    * statut : ENUM
+    * date_creation : TIMESTAMP
+    date_traitement : TIMESTAMP
+}
+
+note right of Reservation
+  **Développeur 2 - Module complexe**
+  
+  **Pour séances EXTRA uniquement**
+  (hors emploi du temps)
+  
+  **Priorités :**
+  - PROFESSEUR : priorite = 100
+  - MEMBRE_CLUB : priorite = 50
+  - FIFO au sein de chaque priorité
+  
+  **Statuts :** EN_ATTENTE, ACCEPTEE, REFUSEE
+  
+  **Double vérification :**
+  1. Vérifier table seances
+  2. Vérifier table reservations
+  
+  **Restriction :**
+  Si role=MEMBRE_CLUB ET salle.type=TP → REFUSEE
+  
+  user_id → users(id) (PROFESSEUR ou MEMBRE_CLUB)
+end note
+
+' ============ ENTITÉS PARTAGÉES ============
+
+entity "Salle" as Salle {
+    * id : BIGINT <<PK>>
+    --
+    * nom : VARCHAR(100)
+    * numero : VARCHAR(20) <<UK>>
+    * type : ENUM
+    * capacite : INTEGER
+    description : VARCHAR(500)
+    equipements : VARCHAR(1000)
+    * etage : INTEGER
+    * batiment : VARCHAR(50)
+    * disponible : BOOLEAN
+    * date_creation : TIMESTAMP
+    date_modification : TIMESTAMP
+}
+
+note right of Salle
+  **Développeur 1**
+  
+  **Type :** COURS, TP, TD
+  
+  **Règle importante :**
+  Salles TP interdites pour les clubs
+  (vérification dans module Réservation)
+  
+  Filtrage par :
+  - Type (pour matières TP/TD)
+  - Capacité >= effectif filière
+  - Disponibilité
+end note
+
+' ============ RELATIONS ============
+
+' Users (table centrale)
+Users ||--o{ Filiere : "coordonne (COORDINATEUR)"
+Users ||--o{ Matiere : "enseigne (PROFESSEUR)"
+Users ||--o{ EmploiDuTemps : "assigné à (PROFESSEUR)"
+Users ||--o{ Liberation : "libère (PROFESSEUR)"
+Users ||--o{ Reclamation : "soumet (PROF/CLUB)"
+Users ||--o{ Reservation : "demande (PROF/CLUB)"
+Users ||--o{ Users : "approuve (ADMIN)"
+
+' Parcours Académique
+Filiere ||--o{ Matiere : "possède"
+Filiere ||--o{ EmploiDuTemps : "a un planning"
+Matiere ||--o{ EmploiDuTemps : "planifié dans"
+Salle ||--o{ EmploiDuTemps : "utilisé dans"
+EmploiDuTemps ||--o{ Seance : "génère (7 séances)"
+Seance ||--o{ Liberation : "peut être libéré"
+Seance }o--|| Salle : "utilise"
+
+' Parcours Opérationnel
+Salle ||--o{ Reclamation : "concerne"
+Seance ||--o{ Reclamation : "pendant (optionnel)"
+Salle ||--o{ Reservation : "réservée"
+Matiere ||--o{ Reservation : "pour (prof EXTRA)"
+
+' Légende
+legend top left
+  **ARCHITECTURE UNIFIÉE v2.0**
+  
+  **Changements majeurs :**
+  ✓ UNE table users (pas 4 tables séparées)
+  ✓ Système de rôles unifié
+  ✓ Workflow d'inscription centralisé
+  ✓ Groupes TP/TD (Groupe 1, Groupe 2)
+  ✓ Cycles (Préparatoire 2 ans, Ingénieur 3 ans)
+  
+  **Tables SUPPRIMÉES :**
+  ❌ professeurs
+  ❌ coordinateurs  
+  ❌ responsables_salles
+  ❌ membres_club
+  
+  **Nouveau :**
+  ✓ users (table unique avec rôles)
+endlegend
+
+@enduml

@@ -1,0 +1,448 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{longtable}
+
+\geometry{top=2cm, bottom=2cm, left=2.5cm, right=2.5cm}
+
+\titleformat{\section}
+{\normalfont\Large\bfseries\color{green!70!black}}{\thesection}{1em}{}
+
+\titleformat{\subsection}
+{\normalfont\large\bfseries\color{green!50!black}}{\thesubsection}{1em}{}
+
+\title{\textbf{Guide Développeur 2\\E-Salle ENSAA}}
+\author{Gestion Avancée}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Vue d'Ensemble - Développeur 2}
+
+\subsection{Votre Mission}
+
+Vous êtes responsable de la \textbf{gestion avancée} du système E-Salle ENSAA avec des modules complexes.
+
+\textbf{Vos 4 modules :}
+\begin{enumerate}
+    \item \textbf{Administration} (5 jours) - Semaine 1
+    \item \textbf{Matière} (8 jours) - Semaines 2-3
+    \item \textbf{Emploi du Temps} (10 jours) - Semaines 4-5
+    \item \textbf{Réservation} (6 jours) - Semaine 6
+\end{enumerate}
+
+\textbf{Total :} 29 jours de développement pur
+
+\subsection{Particularités de Votre Position}
+
+\begin{itemize}
+    \item ⚠️ \textbf{1 dépendance :} Matière attend Filière de Dev1 (fin S3)
+    \item ✅ \textbf{Modules complets} : Backend + Frontend pour chaque module
+    \item ⚠️ \textbf{Modules complexes} : Logique métier avancée, algorithmes, UI interactive
+    \item ✅ \textbf{Aide de Dev1} : Dev1 vous aide en S5-S6 sur Emploi et Réservation
+\end{itemize}
+
+\subsection{Gestion de l'Attente (Semaine 3)}
+
+\textbf{Stratégie :}
+\begin{itemize}
+    \item S1 : Faites Administration (ne dépend que de Users)
+    \item S2 : Continuez Administration + préparez Matière (UI, structure)
+    \item S3 (début) : Attendez que Dev1 termine Filière (3 jours)
+    \item S3 (fin) : Commencez Matière dès que Filière est mergée (3 jours)
+\end{itemize}
+
+\newpage
+
+\section{Vos Modules en Détail}
+
+\subsection{Module 1 : Administration (Semaine 1 - 5 jours)}
+
+\textbf{Objectif :} Système d'approbation des inscriptions et gestion des utilisateurs.
+
+\textbf{Fonctionnalités :}
+\begin{enumerate}
+    \item \textbf{Dashboard admin} : Liste des inscriptions EN\_ATTENTE
+    \item \textbf{Approuver inscription} :
+    \begin{itemize}
+        \item Si PROFESSEUR/COORDINATEUR : Sélectionner filière → Statut = ACTIF
+        \item Si MEMBRE\_CLUB : Saisir nom du club → Statut = ACTIF
+    \end{itemize}
+    \item \textbf{Refuser inscription} : Statut = REFUSE
+    \item \textbf{Notifications} : Email + WhatsApp au user (approbation/refus)
+    \item \textbf{Gestion users} : Liste, modifier, supprimer
+\end{enumerate}
+
+\textbf{Règles métier :}
+\begin{itemize}
+    \item Seul l'admin peut approuver/refuser
+    \item Notification immédiate au user lors de l'approbation/refus
+    \item Pour PROFESSEUR/COORDINATEUR : filiere\_id obligatoire
+    \item Pour MEMBRE\_CLUB : nom\_club obligatoire (texte libre)
+\end{itemize}
+
+\textbf{Fichiers à créer :}
+\begin{itemize}
+    \item \texttt{AdminServlet.java} (approbation, refus, gestion users)
+    \item \texttt{admin/dashboard.jsp} (liste inscriptions EN\_ATTENTE)
+    \item \texttt{admin/approve-form.jsp} (formulaire approbation avec sélection filière/club)
+    \item \texttt{admin/users-list.jsp} (gestion users)
+\end{itemize}
+
+\subsection{Module 2 : Matière (Semaines 2-3 - 8 jours)}
+
+\textbf{⚠️ DÉPENDANCE :} Attend Filière de Dev1 (fin S3)
+
+\textbf{Objectif :} Gestion des matières avec charges horaires et professeurs.
+
+\textbf{Entités :}
+\begin{itemize}
+    \item \texttt{Matiere} : id, nom, filiere\_id, professeur\_id, heures\_cours, heures\_td, heures\_tp, coefficient
+\end{itemize}
+
+\textbf{Fonctionnalités :}
+\begin{enumerate}
+    \item \textbf{CRUD complet} : Créer, Lire, Modifier, Supprimer
+    \item \textbf{Gestion charges horaires} : Cours, TD, TP (séparés)
+    \item \textbf{Assignation professeur} : Sélection d'un user avec role PROFESSEUR ou COORDINATEUR
+    \item \textbf{Assignation filière} : Sélection d'une filière existante
+\end{enumerate}
+
+\textbf{Règles métier :}
+\begin{itemize}
+    \item Nom unique par filière
+    \item Au moins 1 type d'heures (cours, TD ou TP) > 0
+    \item Professeur doit avoir role = PROFESSEUR ou COORDINATEUR
+    \item Filière doit exister (FK vers Filiere de Dev1)
+\end{itemize}
+
+\textbf{Fichiers à créer :}
+\begin{itemize}
+    \item \texttt{Matiere.java} (domain)
+    \item \texttt{MatiereRepository.java + MatiereRepositoryImpl.java}
+    \item \texttt{MatiereService.java + MatiereServiceImpl.java}
+    \item \texttt{MatiereServlet.java}
+    \item \texttt{list.jsp}, \texttt{form.jsp}, \texttt{view.jsp} (dans \texttt{views/matiere/})
+\end{itemize}
+
+\subsection{Module 3 : Emploi du Temps (Semaines 4-5 - 10 jours)}
+
+\textbf{Objectif :} Interface calendrier interactive pour créer les emplois du temps.
+
+\textbf{Entités :}
+\begin{itemize}
+    \item \texttt{EmploiDuTemps} : id, filiere\_id, annee, semaine\_debut, semaine\_fin
+    \item \texttt{Seance} : id, emploi\_id, matiere\_id, salle\_id, professeur\_id, jour, heure\_debut, heure\_fin, groupe (1/2), statut (ACTIVE/LIBEREE)
+\end{itemize}
+
+\textbf{Fonctionnalités :}
+\begin{enumerate}
+    \item \textbf{Interface calendrier} :
+    \begin{itemize}
+        \item Onglets par année (DLA1, DLA2, DLA3 pour Cycle Ingénieur)
+        \item Grille : Jours (Lun-Sam) × Créneaux horaires (8h-18h)
+        \item Bouton "+" dans chaque créneau vide
+    \end{itemize}
+    \item \textbf{Modal d'ajout séance} :
+    \begin{itemize}
+        \item Sélection matière (filtrée par filière)
+        \item Sélection salle (filtrée par type : COURS pour cours, TP pour TP, TD pour TD)
+        \item Sélection professeur (filtrée par matière)
+        \item Sélection groupe (1 ou 2) si TP/TD
+    \end{itemize}
+    \item \textbf{Génération 7 séances} : Répéter la séance pour 7 semaines consécutives
+    \item \textbf{Libération exceptionnelle} : Professeur peut libérer 1 séance spécifique
+    \item \textbf{Libération définitive} : Professeur peut libérer toutes les séances d'une matière
+\end{enumerate}
+
+\textbf{Règles métier :}
+\begin{itemize}
+    \item Pas de chevauchement : 1 salle = 1 séance par créneau
+    \item Pas de chevauchement : 1 professeur = 1 séance par créneau
+    \item Salles filtrées par type (TP uniquement pour TP)
+    \item Groupe obligatoire si TP/TD
+    \item Notification au coordinateur et admin lors de libération
+\end{itemize}
+
+\textbf{Fichiers à créer :}
+\begin{itemize}
+    \item \texttt{EmploiDuTemps.java}, \texttt{Seance.java} (domain)
+    \item \texttt{EmploiDuTempsRepository.java + Impl}, \texttt{SeanceRepository.java + Impl}
+    \item \texttt{EmploiDuTempsService.java + Impl}, \texttt{SeanceService.java + Impl}
+    \item \texttt{EmploiDuTempsServlet.java}, \texttt{SeanceServlet.java}
+    \item \texttt{calendar.jsp} (interface calendrier avec onglets)
+    \item \texttt{modal-add-seance.jsp} (modal pour ajouter séance)
+    \item JavaScript pour l'interactivité (bouton +, modal, AJAX)
+\end{itemize}
+
+\textbf{⚠️ Module le plus complexe !} Dev1 vous aide en S5 !
+
+\subsection{Module 4 : Réservation (Semaine 6 - 6 jours)}
+
+\textbf{Objectif :} Système de réservation avec priorités, FIFO, et vérifications.
+
+\textbf{Entités :}
+\begin{itemize}
+    \item \texttt{Reservation} : id, user\_id, salle\_id, date, heure\_debut, heure\_fin, motif, priorite, statut (EN\_ATTENTE/APPROUVEE/REFUSEE), date\_demande
+\end{itemize}
+
+\textbf{Fonctionnalités :}
+\begin{enumerate}
+    \item \textbf{Demande de réservation} : User sélectionne salle, date, créneau, motif
+    \item \textbf{Vérifications automatiques} :
+    \begin{itemize}
+        \item Salle disponible (pas dans Emploi du Temps)
+        \item Salle disponible (pas dans autres Réservations)
+        \item Salle TP bloquée pour MEMBRE\_CLUB
+    \end{itemize}
+    \item \textbf{Système de priorités} :
+    \begin{itemize}
+        \item PROFESSEUR/COORDINATEUR : priorité = 100
+        \item MEMBRE\_CLUB : priorité = 50
+        \item Si conflit : FIFO (First In First Out) dans chaque catégorie
+    \end{itemize}
+    \item \textbf{Alternatives} : Si salle indisponible, proposer salles similaires (même capacité, même type)
+    \item \textbf{Notifications} : Email + WhatsApp (confirmation, refus, alternatives)
+\end{enumerate}
+
+\textbf{Règles métier :}
+\begin{itemize}
+    \item Double vérification : Emploi du Temps + Réservations existantes
+    \item Salles TP bloquées pour MEMBRE\_CLUB
+    \item Priorité PROFESSEUR > MEMBRE\_CLUB
+    \item FIFO dans chaque catégorie de priorité
+    \item Notification immédiate après décision
+\end{itemize}
+
+\textbf{Fichiers à créer :}
+\begin{itemize}
+    \item \texttt{Reservation.java} (domain)
+    \item \texttt{ReservationRepository.java + ReservationRepositoryImpl.java}
+    \item \texttt{ReservationService.java + ReservationServiceImpl.java} (logique priorités, FIFO, vérifications)
+    \item \texttt{ReservationServlet.java}
+    \item \texttt{list.jsp}, \texttt{form.jsp}, \texttt{view.jsp} (dans \texttt{views/reservation/})
+\end{itemize}
+
+\textbf{⚠️ Module complexe !} Dev1 vous aide si besoin en S6 !
+
+\newpage
+
+\section{Stratégie Git/GitHub pour Dev2}
+
+\subsection{Configuration Initiale (Semaine 0)}
+
+\textbf{Branches principales :}
+\begin{itemize}
+    \item \texttt{main} : Production (ne JAMAIS push directement)
+    \item \texttt{develop} : Intégration (ne JAMAIS push directement)
+    \item \texttt{dev2} : VOTRE branche de travail
+\end{itemize}
+
+\textbf{Setup initial :}
+\begin{verbatim}
+git clone <repo-url>
+git checkout -b dev2
+git push -u origin dev2
+\end{verbatim}
+
+\subsection{Workflow Quotidien}
+
+\textbf{Chaque matin (avant de commencer) :}
+\begin{verbatim}
+git checkout dev2
+git pull origin develop  # Récupérer les changements de Dev1
+git pull origin dev2     # Récupérer vos propres changements
+\end{verbatim}
+
+\textbf{Pendant le développement :}
+\begin{verbatim}
+# Commits fréquents (2-3 fois par jour)
+git add .
+git commit -m "feat(admin): add user approval workflow"
+git push origin dev2
+\end{verbatim}
+
+\textbf{Conventions de commit :}
+\begin{itemize}
+    \item \texttt{feat(module): description} - Nouvelle fonctionnalité
+    \item \texttt{fix(module): description} - Correction de bug
+    \item \texttt{refactor(module): description} - Refactoring
+    \item \texttt{docs(module): description} - Documentation
+\end{itemize}
+
+\textbf{Exemples pour vos modules :}
+\begin{verbatim}
+feat(admin): add inscription approval
+feat(matiere): add CRUD operations
+feat(emploi): add calendar interface
+feat(reservation): add priority system
+fix(emploi): fix seance overlap validation
+\end{verbatim}
+
+\subsection{Workflow Hebdomadaire}
+
+\textbf{Chaque vendredi (fin de semaine) :}
+
+\textbf{1. Préparer votre code :}
+\begin{verbatim}
+git checkout dev2
+git pull origin develop  # S'assurer d'avoir les derniers changements
+# Résoudre conflits si nécessaire
+git add .
+git commit -m "merge: integrate develop changes"
+git push origin dev2
+\end{verbatim}
+
+\textbf{2. Créer Pull Request (PR) :}
+\begin{itemize}
+    \item Aller sur GitHub
+    \item Créer PR : \texttt{dev2 → develop}
+    \item Titre : \texttt{[S1] Module Administration - Dev2}
+    \item Description : Lister les fonctionnalités ajoutées
+    \item Demander review à Dev1
+\end{itemize}
+
+\textbf{3. Après approbation :}
+\begin{itemize}
+    \item Merger la PR sur \texttt{develop}
+    \item Dev1 pourra utiliser votre code (si besoin)
+\end{itemize}
+
+\subsection{Points de Synchronisation Critiques}
+
+\textbf{Fin Semaine 1 :} Merger Administration → Module terminé
+
+\textbf{Fin Semaine 3 :} Attendre que Dev1 merge Filière ⚠️ \textbf{CRITIQUE !}
+
+\textbf{Après merge Filière :} Commencer Matière immédiatement
+
+\textbf{Fin Semaine 4 :} Merger Matière → Vous pouvez continuer Emploi du Temps
+
+\textbf{Fin Semaine 5 :} Merger Emploi du Temps → Vous pouvez commencer Réservation
+
+\textbf{Fin Semaine 6 :} Merger Réservation → Tous vos modules sont terminés !
+
+\subsection{Gestion des Conflits}
+
+\textbf{Si conflit lors du pull :}
+\begin{verbatim}
+git pull origin develop
+# Git affiche les conflits
+# Ouvrir les fichiers en conflit
+# Chercher <<<<<<< HEAD
+# Choisir la bonne version ou combiner
+git add <fichiers-résolus>
+git commit -m "merge: resolve conflicts with develop"
+git push origin dev2
+\end{verbatim}
+
+\textbf{Conseil :} Communiquez avec Dev1 quotidiennement pour éviter les conflits !
+
+\subsection{Collaboration avec Dev1 (S5-S6)}
+
+\textbf{Si Dev1 vous aide sur votre branche :}
+\begin{verbatim}
+# Dev1 travaille sur dev2
+# Vous devez pull régulièrement
+git checkout dev2
+git pull origin dev2  # Récupérer les changements de Dev1
+\end{verbatim}
+
+\textbf{Communication :} Coordonnez-vous pour ne pas travailler sur les mêmes fichiers en même temps !
+
+\newpage
+
+\section{Checklist de Succès}
+
+\subsection{Pour Chaque Module}
+
+\textbf{Avant de merger :}
+\begin{itemize}
+    \item[$\square$] Entité créée avec annotations Hibernate
+    \item[$\square$] Repository implémenté (CRUD complet)
+    \item[$\square$] Service implémenté avec logique métier complexe
+    \item[$\square$] Servlet créé avec toutes les routes
+    \item[$\square$] Pages JSP créées (list, form, view)
+    \item[$\square$] Validation des données (Bean Validation)
+    \item[$\square$] Gestion des erreurs (try-catch)
+    \item[$\square$] Notifications implémentées (Email + WhatsApp)
+    \item[$\square$] Tests manuels effectués
+    \item[$\square$] Code compilé sans erreur
+    \item[$\square$] Commit + Push sur dev2
+    \item[$\square$] PR créée vers develop
+\end{itemize}
+
+\subsection{Points de Synchronisation}
+
+\textbf{Fin Semaine 1 :}
+\begin{itemize}
+    \item[$\square$] Module Administration terminé et mergé
+    \item[$\square$] Workflow approbation/refus fonctionne
+\end{itemize}
+
+\textbf{Fin Semaine 3 :}
+\begin{itemize}
+    \item[$\square$] Filière de Dev1 mergée ⚠️ \textbf{CRITIQUE !}
+    \item[$\square$] Module Matière commencé
+\end{itemize}
+
+\textbf{Fin Semaine 4 :}
+\begin{itemize}
+    \item[$\square$] Module Matière terminé et mergé
+    \item[$\square$] Emploi du Temps en cours
+\end{itemize}
+
+\textbf{Fin Semaine 5 :}
+\begin{itemize}
+    \item[$\square$] Module Emploi du Temps terminé et mergé
+    \item[$\square$] Interface calendrier fonctionne
+\end{itemize}
+
+\textbf{Fin Semaine 6 :}
+\begin{itemize}
+    \item[$\square$] Module Réservation terminé et mergé
+    \item[$\square$] Système de priorités fonctionne
+    \item[$\square$] Tous vos modules sont terminés !
+\end{itemize}
+
+\subsection{Communication}
+
+\textbf{Quotidien :}
+\begin{itemize}
+    \item[$\square$] Standup 10 min avec Dev1 (matin)
+    \item[$\square$] Signaler tout blocage immédiatement
+\end{itemize}
+
+\textbf{Hebdomadaire :}
+\begin{itemize}
+    \item[$\square$] Revue de code croisée (vendredi)
+    \item[$\square$] PR mergée avant le weekend
+\end{itemize}
+
+\section{Conseils Pratiques}
+
+\begin{enumerate}
+    \item \textbf{Gérez l'attente (S3) :} Profitez-en pour peaufiner Administration et préparer Matière (UI, structure)
+    \item \textbf{Modules complexes :} Décomposez en petites tâches (1 jour max par tâche)
+    \item \textbf{Emploi du Temps :} Commencez par l'UI statique, puis ajoutez l'interactivité
+    \item \textbf{Réservation :} Testez les algorithmes de priorité et FIFO avec des cas réels
+    \item \textbf{Demandez de l'aide :} Dev1 est là pour vous aider en S5-S6 !
+    \item \textbf{Testez souvent :} Lancez l'application après chaque fonctionnalité
+    \item \textbf{Commitez fréquemment :} 2-3 commits par jour minimum
+    \item \textbf{Communiquez :} Signalez tout problème immédiatement
+\end{enumerate}
+
+\textbf{Bon développement ! 🚀}
+
+\end{document}
+
