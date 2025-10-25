@@ -32,8 +32,8 @@
         <property name="hibernate.c3p0.max_statements">50</property>
         
         <!-- Entity mappings -->
-        <!-- Add your entity mappings here -->
-        <!-- Example: <mapping class="com.esalle.features.MODULE.domain.YourEntity"/> -->
+        <!-- Module Auth & Users -->
+        <mapping class="com.esalle.features.auth.domain.User"/>
         
     </session-factory>
 </hibernate-configuration>
