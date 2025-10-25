@@ -16,7 +16,7 @@ public class UserRepositoryImpl extends BaseRepositoryImpl<User, Long> implement
     
     @Override
     public Optional<User> findByEmail(String email) {
-        Session session = getSession();
+        Session session = sessionFactory.openSession();
         try {
             Query<User> query = session.createQuery(
                 "FROM User u WHERE u.email = :email", User.class);
@@ -29,7 +29,7 @@ public class UserRepositoryImpl extends BaseRepositoryImpl<User, Long> implement
     
     @Override
     public List<User> findByStatut(User.UserStatus statut) {
-        Session session = getSession();
+        Session session = sessionFactory.openSession();
         try {
             Query<User> query = session.createQuery(
                 "FROM User u WHERE u.statut = :statut ORDER BY u.dateInscription DESC", User.class);
@@ -42,7 +42,7 @@ public class UserRepositoryImpl extends BaseRepositoryImpl<User, Long> implement
     
     @Override
     public List<User> findByRole(User.UserRole role) {
-        Session session = getSession();
+        Session session = sessionFactory.openSession();
         try {
             Query<User> query = session.createQuery(
                 "FROM User u WHERE u.role = :role ORDER BY u.nom, u.prenom", User.class);
