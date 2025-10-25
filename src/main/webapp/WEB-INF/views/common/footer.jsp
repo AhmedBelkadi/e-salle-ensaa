@@ -1,22 +1,20 @@
     </main>
     
     <!-- Footer -->
-    <footer class="bg-light text-center text-muted py-4 mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <p>&copy; 2024 E-Salle ENSAA. Tous droits réservés.</p>
+    <footer class="bg-gray-800 text-white mt-12">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-center md:text-left mb-4 md:mb-0">
+                    <p class="text-gray-300">&copy; 2025 E-Salle ENSAA. Tous droits réservés.</p>
                 </div>
-                <div class="col-md-6">
-                    <p>Développé avec <i class="bi bi-heart-fill text-danger"></i> pour l'ENSAA</p>
+                <div class="text-center md:text-right">
+                    <p class="text-gray-300">
+                        Développé avec <span class="text-red-500">❤️</span> pour l'ENSAA
+                    </p>
                 </div>
             </div>
         </div>
     </footer>
     
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JS -->
-    <script src="${pageContext.request.contextPath}/assets/js/main.js"></script>
 </body>
 </html>

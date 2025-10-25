@@ -5,54 +5,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Salle ENSAA - Gestion des Salles</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="${pageContext.request.contextPath}/assets/css/custom.css" rel="stylesheet">
+    <title>${param.title != null ? param.title : 'E-Salle ENSAA'}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-50">
+    
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="${pageContext.request.contextPath}/">
-                <i class="bi bi-building"></i> E-Salle ENSAA
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/">
-                            <i class="bi bi-house"></i> Accueil
-                        </a>
-                    </li>
-                    <!-- Add your module navigation links here -->
-                    <!-- Example:
-                    <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/module">
-                            <i class="bi bi-icon"></i> Module Name
-                        </a>
-                    </li>
-                    -->
-                </ul>
+    <nav class="bg-indigo-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="${pageContext.request.contextPath}/" class="text-2xl font-bold hover:text-indigo-200 transition">
+                    🏫 E-Salle ENSAA
+                </a>
                 
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <span class="nav-link text-light">
-                            <i class="bi bi-code-square"></i> En développement
+                <div class="hidden md:flex space-x-6">
+                    <a href="${pageContext.request.contextPath}/" class="hover:text-indigo-200 transition">
+                        🏠 Accueil
+                    </a>
+                    <a href="${pageContext.request.contextPath}/salles/list" class="hover:text-indigo-200 transition">
+                        🚪 Salles
+                    </a>
+                    <c:if test="${not empty sessionScope.user}">
+                        <a href="${pageContext.request.contextPath}/auth/logout" class="hover:text-indigo-200 transition">
+                            🚪 Déconnexion
+                        </a>
+                    </c:if>
+                </div>
+                
+                <!-- User info -->
+                <c:if test="${not empty sessionScope.userName}">
+                    <div class="hidden md:block text-sm">
+                        <span class="bg-indigo-700 px-3 py-1 rounded-full">
+                            👤 ${sessionScope.userName}
                         </span>
-                    </li>
-                </ul>
+                    </div>
+                </c:if>
             </div>
         </div>
     </nav>
     
     <!-- Main Content -->
-    <main class="container my-4">
+    <main>

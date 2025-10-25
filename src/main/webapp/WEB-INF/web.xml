@@ -115,8 +115,7 @@
             <url-pattern>*.jsp</url-pattern>
             <page-encoding>UTF-8</page-encoding>
             <scripting-invalid>false</scripting-invalid>
-            <include-prelude>/WEB-INF/views/common/header.jsp</include-prelude>
-            <include-coda>/WEB-INF/views/common/footer.jsp</include-coda>
+            <!-- Header and footer are now manually included in each JSP -->
         </jsp-property-group>
     </jsp-config>
 

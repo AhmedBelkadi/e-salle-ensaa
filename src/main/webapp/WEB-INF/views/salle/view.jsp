@@ -1,26 +1,6 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${salle.nom} - E-Salle ENSAA</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50">
-    
-    <!-- Header -->
-    <nav class="bg-indigo-600 text-white shadow-lg">
-        <div class="container mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <h1 class="text-2xl font-bold">E-Salle ENSAA</h1>
-                <div class="space-x-4">
-                    <a href="${pageContext.request.contextPath}/salles/list" class="hover:text-indigo-200">← Retour à la liste</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+<jsp:include page="../common/header.jsp">
+    <jsp:param name="title" value="${salle.nom} - E-Salle ENSAA"/>
+</jsp:include>
 
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         
@@ -169,6 +149,5 @@
         </div>
     </div>
 
-</body>
-</html>
+<jsp:include page="../common/footer.jsp"/>
 
