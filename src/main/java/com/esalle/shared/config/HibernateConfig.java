@@ -42,7 +42,8 @@ public class HibernateConfig {
         configuration.setProperties(properties);
         
         // Add entity classes here
-        // Example: configuration.addAnnotatedClass(YourEntity.class);
+        // Module Auth & Users
+        configuration.addAnnotatedClass(com.esalle.features.auth.domain.User.class);
         
         return configuration;
     }

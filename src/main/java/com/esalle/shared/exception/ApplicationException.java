@@ -4,7 +4,7 @@ package com.esalle.shared.exception;
  * Base application exception
  * All custom exceptions should extend this class
  */
-public class ApplicationException extends Exception {
+public class ApplicationException extends RuntimeException {
     
     private final String errorCode;
     private final String userMessage;
