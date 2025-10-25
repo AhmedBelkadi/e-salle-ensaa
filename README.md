@@ -21,85 +21,76 @@ Application de gestion des salles pour l'ENSAA développée avec **Java Servlets
 
 ### Prérequis
 
-- **Java 11** ou supérieur
-- **Maven 3.8+**
-- **Docker** et **Docker Compose**
+- **Docker** et **Docker Compose** (c'est tout !)
 - **Git**
-- **IDE** (IntelliJ IDEA, Eclipse, ou VS Code)
 
-### 1. Cloner le Projet
+### Installation en 3 Commandes
 
 ```bash
+# 1. Cloner le projet
 git clone https://github.com/AhmedBelkadi/e-salle-ensaa.git
 cd e-salle-ensaa
+
+# 2. Checkout votre branche (dev1 ou dev2)
+git checkout dev2  # ou dev1
+
+# 3. Démarrer TOUT avec Docker
+docker-compose up --build -d
 ```
 
-### 2. Configurer Git
+**C'est tout ! 🎉**
+
+Accéder à l'application : **http://localhost:8080**
+
+---
+
+### Commandes Utiles
 
 ```bash
-# Vérifier les branches
-git branch -a
+# Voir les logs
+docker-compose logs -f
 
-# Vous devriez voir :
-# * develop
-#   remotes/origin/main
-#   remotes/origin/develop
-#   remotes/origin/dev1
-#   remotes/origin/dev2
+# Arrêter l'application
+docker-compose down
 
-# Si vous êtes Dev2, checkout votre branche
-git checkout dev2
+# Redémarrer après modifications
+docker-compose up --build -d
+
+# Voir les conteneurs en cours
+docker ps
 ```
 
-### 3. Démarrer PostgreSQL
+---
+
+### Mode Développement (Sans Docker)
+
+**Si vous préférez développer sans Docker :**
+
+<details>
+<summary>Cliquez pour voir les étapes</summary>
+
+**Prérequis supplémentaires :**
+- Java 11+
+- Maven 3.8+
+- PostgreSQL installé localement
+
+**Étapes :**
 
 ```bash
-# Démarrer PostgreSQL avec Docker
+# 1. Démarrer PostgreSQL localement
+# (ou avec Docker uniquement pour la DB)
 docker-compose up -d postgres
 
-# Vérifier que PostgreSQL fonctionne
-docker ps
-# Doit afficher : esalle-postgres (Up)
-
-# Tester la connexion
-docker exec -it esalle-postgres psql -U postgres -d esalle_ensaa
-# Dans psql : \dt (pour voir les tables)
-# Puis : \q (pour quitter)
-```
-
-### 4. Compiler le Projet
-
-```bash
-# Compiler avec Maven
+# 2. Compiler avec Maven
 mvn clean compile
 
-# Ou compiler + packager
-mvn clean package
-```
-
-### 5. Lancer l'Application
-
-**Option A : Avec Docker (Recommandé)**
-
-```bash
-docker-compose up webapp
-```
-
-**Option B : Avec Maven (Développement)**
-
-```bash
+# 3. Lancer avec Tomcat
 mvn tomcat7:run
+
+# 4. Accéder à http://localhost:8080
 ```
 
-**Option C : Avec votre IDE**
-
-- Configurer Tomcat 9 dans votre IDE
-- Déployer le WAR
-- Démarrer Tomcat
-
-### 6. Accéder à l'Application
-
-Ouvrir dans le navigateur : **http://localhost:8080**
+</details>
 
 ---
 
