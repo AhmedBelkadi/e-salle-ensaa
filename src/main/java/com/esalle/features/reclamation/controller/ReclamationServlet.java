@@ -48,14 +48,13 @@ import java.util.List;
 public class ReclamationServlet extends HttpServlet {
 
     private ReclamationService reclamationService;
-    private SalleRepository salleRepository;
 
     @Override
     public void init() throws ServletException {
         super.init();
         ReclamationRepository reclamationRepository = new ReclamationRepositoryImpl();
         UserRepository userRepository = new UserRepositoryImpl();
-        this.salleRepository = new SalleRepositoryImpl();
+        SalleRepository salleRepository = new SalleRepositoryImpl();
         NotificationService notificationService = new NotificationServiceImpl();
         
         this.reclamationService = new ReclamationServiceImpl(
@@ -183,8 +182,8 @@ public class ReclamationServlet extends HttpServlet {
     private void handleNew(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        // Charger la liste de toutes les salles pour le select
-        request.setAttribute("salles", salleRepository.findAll());
+        // Charger la liste de toutes les salles pour le select via le service
+        request.setAttribute("salles", reclamationService.getAllSallesForForm());
         
         request.getRequestDispatcher("/WEB-INF/views/reclamation/form.jsp").forward(request, response);
     }
@@ -235,8 +234,8 @@ public class ReclamationServlet extends HttpServlet {
             request.setAttribute("description", description);
             request.setAttribute("urgence", urgenceParam);
             
-            // Recharger la liste des salles en cas d'erreur
-            request.setAttribute("salles", salleRepository.findAll());
+            // Recharger la liste des salles en cas d'erreur via le service
+            request.setAttribute("salles", reclamationService.getAllSallesForForm());
             
             request.getRequestDispatcher("/WEB-INF/views/reclamation/form.jsp").forward(request, response);
         }

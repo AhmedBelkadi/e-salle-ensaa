@@ -11,7 +11,7 @@
             ${isUserView ? 'Mes Réclamations' : 'Gestion des Réclamations'}
         </h2>
         <!-- Le bouton n'est pas affiché si l'utilisateur est un ADMIN -->
-        <c:if test="${sessionScope.user.role != 'ADMIN'}">
+        <c:if test="${sessionScope.user.role.name() != 'ADMIN'}">
             <a href="${pageContext.request.contextPath}/reclamations/new" 
                class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition">
                 ➕ Nouvelle Réclamation

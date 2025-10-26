@@ -76,5 +76,10 @@ public interface ReclamationService {
      * Compte les réclamations urgentes en attente
      */
     long countUrgentesEnAttente();
+
+    /**
+     * Récupère toutes les salles disponibles (pour le formulaire de création)
+     */
+    List<com.esalle.features.salle.domain.Salle> getAllSallesForForm();
 }
 

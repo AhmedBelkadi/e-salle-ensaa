@@ -251,5 +251,10 @@ public class ReclamationServiceImpl implements ReclamationService {
             notificationService.sendWhatsApp(user.getTelephone(), message);
         }
     }
+
+    @Override
+    public List<Salle> getAllSallesForForm() {
+        return salleRepository.findAll();
+    }
 }
 
