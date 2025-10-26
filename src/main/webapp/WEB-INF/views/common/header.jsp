@@ -25,7 +25,7 @@
                     
                     <c:if test="${not empty sessionScope.user}">
                         <!-- Salles - Tous les utilisateurs authentifiés -->
-                        <a href="${pageContext.request.contextPath}/salle/list" class="hover:text-indigo-200 transition">
+                        <a href="${pageContext.request.contextPath}/salles/list" class="hover:text-indigo-200 transition">
                             🚪 Salles
                         </a>
                         
