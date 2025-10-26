@@ -69,8 +69,8 @@
         </c:if>
     </div>
 
-    <!-- Formulaire traitement (Admin) -->
-    <c:if test="${sessionScope.user.role == 'ADMIN' && reclamation.enAttente}">
+    <!-- Formulaire traitement (Admin uniquement) -->
+    <c:if test="${sessionScope.user.role.name() == 'ADMIN' && reclamation.enAttente}">
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold mb-4">Traiter la réclamation</h3>
             <form method="post" action="${pageContext.request.contextPath}/reclamations/traiter">

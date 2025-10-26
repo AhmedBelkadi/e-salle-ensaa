@@ -10,17 +10,20 @@
         <!-- Titre et actions -->
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-3xl font-bold text-gray-800">${filiere.nomComplet}</h2>
-            <div class="flex gap-2">
-                <a href="${pageContext.request.contextPath}/filieres/edit?id=${filiere.id}" 
-                   class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                    ✏️ Modifier
-                </a>
-                <a href="${pageContext.request.contextPath}/filieres/delete?id=${filiere.id}" 
-                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette filière ?')"
-                   class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                    🗑️ Supprimer
-                </a>
-            </div>
+            <!-- Boutons visibles pour ADMIN et COORDINATEUR -->
+            <c:if test="${sessionScope.user.role.name() == 'ADMIN' || sessionScope.user.role.name() == 'COORDINATEUR'}">
+                <div class="flex gap-2">
+                    <a href="${pageContext.request.contextPath}/filieres/edit?id=${filiere.id}" 
+                       class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        ✏️ Modifier
+                    </a>
+                    <a href="${pageContext.request.contextPath}/filieres/delete?id=${filiere.id}" 
+                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette filière ?')"
+                       class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                        🗑️ Supprimer
+                    </a>
+                </div>
+            </c:if>
         </div>
 
         <!-- Messages -->

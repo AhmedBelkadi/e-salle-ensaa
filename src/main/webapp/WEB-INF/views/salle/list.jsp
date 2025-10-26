@@ -10,10 +10,13 @@
         <!-- Titre et bouton ajouter -->
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-3xl font-bold text-gray-800">Gestion des Salles</h2>
-            <a href="${pageContext.request.contextPath}/salles/new" 
-               class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition shadow-lg">
-                ➕ Nouvelle Salle
-            </a>
+            <!-- Bouton visible uniquement pour ADMIN -->
+            <c:if test="${sessionScope.user.role.name() == 'ADMIN'}">
+                <a href="${pageContext.request.contextPath}/salles/new" 
+                   class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition shadow-lg">
+                    ➕ Nouvelle Salle
+                </a>
+            </c:if>
         </div>
 
         <!-- Messages de succès et d'erreur -->
@@ -96,10 +99,12 @@
                 <c:when test="${empty salles}">
                     <div class="p-8 text-center text-gray-500">
                         <p class="text-lg">Aucune salle trouvée</p>
-                        <a href="${pageContext.request.contextPath}/salles/new" 
-                           class="text-indigo-600 hover:text-indigo-800 font-semibold mt-2 inline-block">
-                            Créer la première salle
-                        </a>
+                        <c:if test="${sessionScope.user.role.name() == 'ADMIN'}">
+                            <a href="${pageContext.request.contextPath}/salles/new" 
+                               class="text-indigo-600 hover:text-indigo-800 font-semibold mt-2 inline-block">
+                                Créer la première salle
+                            </a>
+                        </c:if>
                     </div>
                 </c:when>
                 <c:otherwise>
@@ -158,11 +163,14 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                         <a href="${pageContext.request.contextPath}/salles/view?id=${salle.id}" 
                                            class="text-indigo-600 hover:text-indigo-900">👁️ Voir</a>
-                                        <a href="${pageContext.request.contextPath}/salles/edit?id=${salle.id}" 
-                                           class="text-blue-600 hover:text-blue-900">✏️ Modifier</a>
-                                        <a href="${pageContext.request.contextPath}/salles/delete?id=${salle.id}" 
-                                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette salle ?')"
-                                           class="text-red-600 hover:text-red-900">🗑️ Supprimer</a>
+                                        <!-- Boutons Modifier/Supprimer visibles uniquement pour ADMIN -->
+                                        <c:if test="${sessionScope.user.role.name() == 'ADMIN'}">
+                                            <a href="${pageContext.request.contextPath}/salles/edit?id=${salle.id}" 
+                                               class="text-blue-600 hover:text-blue-900">✏️ Modifier</a>
+                                            <a href="${pageContext.request.contextPath}/salles/delete?id=${salle.id}" 
+                                               onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette salle ?')"
+                                               class="text-red-600 hover:text-red-900">🗑️ Supprimer</a>
+                                        </c:if>
                                     </td>
                                 </tr>
                             </c:forEach>

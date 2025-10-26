@@ -10,10 +10,13 @@
         <!-- Titre et bouton ajouter -->
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-3xl font-bold text-gray-800">Gestion des Filières</h2>
-            <a href="${pageContext.request.contextPath}/filieres/new" 
-               class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition shadow-lg">
-                ➕ Nouvelle Filière
-            </a>
+            <!-- Bouton visible pour ADMIN et COORDINATEUR -->
+            <c:if test="${sessionScope.user.role.name() == 'ADMIN' || sessionScope.user.role.name() == 'COORDINATEUR'}">
+                <a href="${pageContext.request.contextPath}/filieres/new" 
+                   class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition shadow-lg">
+                    ➕ Nouvelle Filière
+                </a>
+            </c:if>
         </div>
 
         <!-- Messages de succès et d'erreur -->
@@ -125,10 +128,12 @@
                 <c:when test="${empty filieres}">
                     <div class="p-8 text-center text-gray-500">
                         <p class="text-lg">Aucune filière trouvée</p>
-                        <a href="${pageContext.request.contextPath}/filieres/new" 
-                           class="text-indigo-600 hover:text-indigo-800 font-semibold mt-2 inline-block">
-                            Créer la première filière
-                        </a>
+                        <c:if test="${sessionScope.user.role.name() == 'ADMIN' || sessionScope.user.role.name() == 'COORDINATEUR'}">
+                            <a href="${pageContext.request.contextPath}/filieres/new" 
+                               class="text-indigo-600 hover:text-indigo-800 font-semibold mt-2 inline-block">
+                                Créer la première filière
+                            </a>
+                        </c:if>
                     </div>
                 </c:when>
                 <c:otherwise>
@@ -174,11 +179,14 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                         <a href="${pageContext.request.contextPath}/filieres/view?id=${filiere.id}" 
                                            class="text-indigo-600 hover:text-indigo-900">👁️ Voir</a>
-                                        <a href="${pageContext.request.contextPath}/filieres/edit?id=${filiere.id}" 
-                                           class="text-blue-600 hover:text-blue-900">✏️ Modifier</a>
-                                        <a href="${pageContext.request.contextPath}/filieres/delete?id=${filiere.id}" 
-                                           onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette filière ?')"
-                                           class="text-red-600 hover:text-red-900">🗑️ Supprimer</a>
+                                        <!-- Boutons Modifier/Supprimer visibles pour ADMIN et COORDINATEUR -->
+                                        <c:if test="${sessionScope.user.role.name() == 'ADMIN' || sessionScope.user.role.name() == 'COORDINATEUR'}">
+                                            <a href="${pageContext.request.contextPath}/filieres/edit?id=${filiere.id}" 
+                                               class="text-blue-600 hover:text-blue-900">✏️ Modifier</a>
+                                            <a href="${pageContext.request.contextPath}/filieres/delete?id=${filiere.id}" 
+                                               onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette filière ?')"
+                                               class="text-red-600 hover:text-red-900">🗑️ Supprimer</a>
+                                        </c:if>
                                     </td>
                                 </tr>
                             </c:forEach>
