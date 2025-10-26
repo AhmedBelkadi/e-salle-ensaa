@@ -10,17 +10,20 @@
         <!-- Titre et actions -->
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-3xl font-bold text-gray-800">${salle.nom}</h2>
-            <div class="space-x-2">
-                <a href="${pageContext.request.contextPath}/salles/edit?id=${salle.id}" 
-                   class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-                    ✏️ Modifier
-                </a>
-                <a href="${pageContext.request.contextPath}/salles/delete?id=${salle.id}" 
-                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette salle ?')"
-                   class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
-                    🗑️ Supprimer
-                </a>
-            </div>
+            <!-- Boutons visibles uniquement pour ADMIN -->
+            <c:if test="${sessionScope.user.role.name() == 'ADMIN'}">
+                <div class="space-x-2">
+                    <a href="${pageContext.request.contextPath}/salles/edit?id=${salle.id}" 
+                       class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                        ✏️ Modifier
+                    </a>
+                    <a href="${pageContext.request.contextPath}/salles/delete?id=${salle.id}" 
+                       onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette salle ?')"
+                       class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">
+                        🗑️ Supprimer
+                    </a>
+                </div>
+            </c:if>
         </div>
 
         <!-- Informations principales -->
