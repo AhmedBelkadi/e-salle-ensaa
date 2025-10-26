@@ -48,6 +48,9 @@ public class HibernateConfig {
         // Module Salle
         configuration.addAnnotatedClass(com.esalle.features.salle.domain.Salle.class);
         
+        // Module Filière
+        configuration.addAnnotatedClass(com.esalle.features.filiere.domain.Filiere.class);
+        
         return configuration;
     }
 }
