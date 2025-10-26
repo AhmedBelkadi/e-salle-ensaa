@@ -25,7 +25,7 @@
                     <option value="">-- Sélectionner une salle --</option>
                     <c:forEach var="salle" items="${salles}">
                         <option value="${salle.id}" ${salleId == salle.id ? 'selected' : ''}>
-                            ${salle.nom} (${salle.typeSalle} - Capacité: ${salle.capacite})
+                            ${salle.nom} (${salle.type} - Capacité: ${salle.capacite})
                         </option>
                     </c:forEach>
                 </select>
