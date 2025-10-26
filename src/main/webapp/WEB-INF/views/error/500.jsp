@@ -2,62 +2,37 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <jsp:include page="../common/header.jsp">
-    <jsp:param name="title" value="500 - Erreur serveur"/>
+    <jsp:param name="title" value="Erreur serveur - E-Salle ENSAA"/>
 </jsp:include>
 
-<div class="container mx-auto px-4 py-16">
-    <div class="max-w-2xl mx-auto text-center">
-        <!-- Error Icon & Code -->
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-gray-100 p-4">
+    <div class="text-center max-w-md">
+        <!-- Error Icon -->
         <div class="mb-8">
-            <div class="text-9xl font-bold text-red-300 mb-4">500</div>
-            <div class="text-6xl mb-6">⚠️</div>
+            <div class="inline-flex items-center justify-center w-24 h-24 bg-red-100 rounded-full">
+                <i class="fas fa-exclamation-triangle w-12 h-12 text-red-600"></i>
+            </div>
         </div>
 
         <!-- Error Message -->
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border-l-4 border-red-500">
-            <h1 class="text-3xl font-bold text-gray-800 mb-4">
-                Erreur interne du serveur
-            </h1>
-            <p class="text-lg text-gray-600 mb-4">
-                Une erreur inattendue s'est produite.
-            </p>
-            <p class="text-gray-500">
-                Notre équipe technique a été notifiée et travaille à résoudre le problème.
-            </p>
-        </div>
+        <h1 class="text-6xl font-bold text-gray-900 mb-4">500</h1>
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Erreur serveur</h2>
+        <p class="text-gray-600 mb-8">
+            Une erreur interne s'est produite. Notre équipe a été notifiée et travaille sur une solution.
+        </p>
 
-        <!-- What to do -->
-        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-8 text-left">
-            <h3 class="text-lg font-semibold text-yellow-800 mb-3">💡 Que pouvez-vous faire ?</h3>
-            <ul class="space-y-2 text-gray-700">
-                <li class="flex items-start">
-                    <span class="text-yellow-600 mr-2">•</span>
-                    <span>Rafraîchir la page dans quelques instants</span>
-                </li>
-                <li class="flex items-start">
-                    <span class="text-yellow-600 mr-2">•</span>
-                    <span>Vérifier votre connexion internet</span>
-                </li>
-                <li class="flex items-start">
-                    <span class="text-yellow-600 mr-2">•</span>
-                    <span>Revenir à la page précédente</span>
-                </li>
-                <li class="flex items-start">
-                    <span class="text-yellow-600 mr-2">•</span>
-                    <span>Contacter l'administrateur si le problème persiste</span>
-                </li>
-            </ul>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <!-- Actions -->
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
             <a href="${pageContext.request.contextPath}/" 
-               class="bg-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition transform hover:-translate-y-1 shadow-lg">
-                🏠 Retour à l'accueil
+               class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white transition">
+                <i class="fas fa-home w-4 h-4"></i>
+                Retour à l'accueil
             </a>
-            <button onclick="history.back()" 
-                    class="bg-white text-gray-700 border-2 border-gray-300 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition transform hover:-translate-y-1 shadow-lg">
-                ← Page précédente
+            <button 
+                onclick="location.reload()"
+                class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-6 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition">
+                <i class="fas fa-redo w-4 h-4"></i>
+                Réessayer
             </button>
         </div>
     </div>

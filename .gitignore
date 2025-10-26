@@ -36,6 +36,11 @@ Thumbs.db
 uploads/
 temp/
 
+# Report (LaTeX - not for production)
+report/
+
+# UI Template
+ui-templete/
 # Docker
 docker/ssl/*.key
 docker/ssl/*.crt
