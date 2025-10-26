@@ -87,14 +87,54 @@
                 </p>
             </div>
 
-            <!-- Compte admin par défaut -->
-            <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <p class="text-xs text-gray-500 text-center mb-2">
-                    <strong>Compte Admin par défaut :</strong>
+            <!-- Comptes de test disponibles -->
+            <div class="mt-6 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-indigo-200">
+                <p class="text-sm font-semibold text-indigo-900 text-center mb-3">
+                    🧪 Comptes de Test (Dev)
                 </p>
-                <p class="text-xs text-gray-600 text-center">
-                    Email: <code class="bg-gray-200 px-2 py-1 rounded">admin@ensaa.ma</code><br>
-                    Mot de passe: <code class="bg-gray-200 px-2 py-1 rounded">admin123</code>
+                <div class="space-y-2 text-xs">
+                    <!-- ADMIN -->
+                    <div class="flex items-center justify-between p-2 bg-white rounded border border-red-200 hover:shadow-md transition cursor-pointer"
+                         onclick="document.getElementById('email').value='admin@ensaa.ma'; document.getElementById('password').value='Test@2024';">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-semibold">👑 ADMIN</span>
+                            <code class="text-gray-700">admin@ensaa.ma</code>
+                        </div>
+                        <span class="text-gray-400 text-xs">Cliquer pour remplir</span>
+                    </div>
+                    
+                    <!-- COORDINATEUR -->
+                    <div class="flex items-center justify-between p-2 bg-white rounded border border-green-200 hover:shadow-md transition cursor-pointer"
+                         onclick="document.getElementById('email').value='coordinateur@ensaa.ma'; document.getElementById('password').value='Test@2024';">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-semibold">📚 COORDINATEUR</span>
+                            <code class="text-gray-700">coordinateur@ensaa.ma</code>
+                        </div>
+                        <span class="text-gray-400 text-xs">Cliquer pour remplir</span>
+                    </div>
+                    
+                    <!-- PROFESSEUR -->
+                    <div class="flex items-center justify-between p-2 bg-white rounded border border-blue-200 hover:shadow-md transition cursor-pointer"
+                         onclick="document.getElementById('email').value='professeur@ensaa.ma'; document.getElementById('password').value='Test@2024';">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-semibold">👨‍🏫 PROFESSEUR</span>
+                            <code class="text-gray-700">professeur@ensaa.ma</code>
+                        </div>
+                        <span class="text-gray-400 text-xs">Cliquer pour remplir</span>
+                    </div>
+                    
+                    <!-- MEMBRE_CLUB -->
+                    <div class="flex items-center justify-between p-2 bg-white rounded border border-purple-200 hover:shadow-md transition cursor-pointer"
+                         onclick="document.getElementById('email').value='club@ensaa.ma'; document.getElementById('password').value='Test@2024';">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-semibold">🎭 MEMBRE_CLUB</span>
+                            <code class="text-gray-700">club@ensaa.ma</code>
+                        </div>
+                        <span class="text-gray-400 text-xs">Cliquer pour remplir</span>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 text-center mt-3">
+                    Mot de passe pour tous: <code class="bg-white px-2 py-1 rounded font-mono">Test@2024</code>
                 </p>
             </div>
         </div>
