@@ -5,188 +5,213 @@
     <jsp:param name="title" value="Gestion des Salles - E-Salle ENSAA"/>
 </jsp:include>
 
-    <div class="container mx-auto px-4 py-8">
-        
-        <!-- Titre et bouton ajouter -->
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-3xl font-bold text-gray-800">Gestion des Salles</h2>
-            <!-- Bouton visible uniquement pour ADMIN -->
+<div class="p-6">
+    <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Salles</h1>
+                <p class="text-gray-600 mt-2">Gérer et consulter les salles disponibles</p>
+            </div>
             <c:if test="${sessionScope.user.role.name() == 'ADMIN'}">
                 <a href="${pageContext.request.contextPath}/salles/new" 
-                   class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition shadow-lg">
-                    ➕ Nouvelle Salle
+                   class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-9 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white">
+                    <i class="fas fa-plus w-4 h-4"></i>
+                    Nouvelle Salle
                 </a>
             </c:if>
         </div>
 
-        <!-- Messages de succès et d'erreur -->
+        <!-- Messages -->
         <c:if test="${not empty sessionScope.success}">
-            <div class="mb-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded">
-                <p class="font-medium">✅ ${sessionScope.success}</p>
+            <div class="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+                ${sessionScope.success}
             </div>
+            <c:remove var="success" scope="session"/>
         </c:if>
         <c:if test="${not empty sessionScope.error}">
-            <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
-                <p class="font-medium">❌ ${sessionScope.error}</p>
+            <div class="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                ${sessionScope.error}
             </div>
+            <c:remove var="error" scope="session"/>
         </c:if>
-        <c:remove var="success" scope="session"/>
-        <c:remove var="error" scope="session"/>
 
-        <!-- Filtres et recherche -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">🔍 Filtres et Recherche</h3>
-            
-            <form method="get" action="${pageContext.request.contextPath}/salles/list" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                
-                <!-- Type -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Type</label>
-                    <select name="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                        <option value="">Tous les types</option>
-                        <option value="COURS" ${typeFilter == 'COURS' ? 'selected' : ''}>Cours</option>
-                        <option value="TP" ${typeFilter == 'TP' ? 'selected' : ''}>TP</option>
-                        <option value="TD" ${typeFilter == 'TD' ? 'selected' : ''}>TD</option>
-                    </select>
-                </div>
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Filters Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white flex flex-col gap-6 rounded-xl border border-gray-200 py-6 shadow-sm">
+                    <div class="px-6 pt-0 space-y-6">
+                        <h3 class="text-gray-900 font-semibold">Filtres</h3>
 
-                <!-- Disponibilité -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Disponibilité</label>
-                    <select name="disponible" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                        <option value="">Toutes</option>
-                        <option value="true" ${disponibleFilter == 'true' ? 'selected' : ''}>Disponibles</option>
-                        <option value="false" ${disponibleFilter == 'false' ? 'selected' : ''}>Non disponibles</option>
-                    </select>
-                </div>
+                        <form method="get" action="${pageContext.request.contextPath}/salles/list" class="space-y-4">
+                            <!-- Type Filter -->
+                            <div class="space-y-2">
+                                <label class="text-gray-700 font-medium text-sm">Type</label>
+                                <select name="type" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 text-sm">
+                                    <option value="">Tous les types</option>
+                                    <option value="COURS" ${typeFilter == 'COURS' ? 'selected' : ''}>Cours</option>
+                                    <option value="TP" ${typeFilter == 'TP' ? 'selected' : ''}>TP</option>
+                                    <option value="TD" ${typeFilter == 'TD' ? 'selected' : ''}>TD</option>
+                                </select>
+                            </div>
 
-                <!-- Capacité minimale -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Capacité min.</label>
-                    <input type="number" name="capaciteMin" value="${capaciteMin}" 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                           placeholder="Ex: 30">
-                </div>
+                            <!-- Disponibilité Filter -->
+                            <div class="space-y-2">
+                                <label class="text-gray-700 font-medium text-sm">Disponibilité</label>
+                                <select name="disponible" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 text-sm">
+                                    <option value="">Toutes</option>
+                                    <option value="true" ${disponibleFilter == 'true' ? 'selected' : ''}>Disponibles</option>
+                                    <option value="false" ${disponibleFilter == 'false' ? 'selected' : ''}>Non disponibles</option>
+                                </select>
+                            </div>
 
-                <!-- Bouton filtrer -->
-                <div class="flex items-end">
-                    <button type="submit" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
-                        Filtrer
-                    </button>
-                </div>
-            </form>
+                            <!-- Capacité Filter -->
+                            <div class="space-y-2">
+                                <label class="text-gray-700 font-medium text-sm">Capacité minimale</label>
+                                <input type="number" name="capaciteMin" value="${capaciteMin}" 
+                                       placeholder="Ex: 30"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-900 text-sm">
+                            </div>
 
-            <!-- Recherche par nom -->
-            <form method="get" action="${pageContext.request.contextPath}/salles/search" class="mt-4">
-                <div class="flex gap-2">
-                    <input type="text" name="keyword" value="${keyword}" 
-                           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-                           placeholder="Rechercher par nom...">
-                    <button type="submit" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition">
-                        Rechercher
-                    </button>
-                    <a href="${pageContext.request.contextPath}/salles/list" 
-                       class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition">
-                        Réinitialiser
-                    </a>
-                </div>
-            </form>
-        </div>
-
-        <!-- Liste des salles -->
-        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <c:choose>
-                <c:when test="${empty salles}">
-                    <div class="p-8 text-center text-gray-500">
-                        <p class="text-lg">Aucune salle trouvée</p>
-                        <c:if test="${sessionScope.user.role.name() == 'ADMIN'}">
-                            <a href="${pageContext.request.contextPath}/salles/new" 
-                               class="text-indigo-600 hover:text-indigo-800 font-semibold mt-2 inline-block">
-                                Créer la première salle
+                            <!-- Buttons -->
+                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md py-2 text-sm">
+                                Appliquer les filtres
+                            </button>
+                            <a href="${pageContext.request.contextPath}/salles/list" 
+                               class="block w-full text-center border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 font-medium rounded-md py-2 text-sm">
+                                Réinitialiser
                             </a>
-                        </c:if>
+                        </form>
                     </div>
-                </c:when>
-                <c:otherwise>
-                    <table class="w-full">
-                        <thead class="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacité</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Équipements</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disponibilité</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                </div>
+            </div>
+
+            <!-- Rooms Grid -->
+            <div class="lg:col-span-3 space-y-4">
+                <div class="text-sm text-gray-600">
+                    ${salles.size()} salle(s) trouvée(s)
+                </div>
+
+                <c:choose>
+                    <c:when test="${empty salles}">
+                        <div class="bg-white flex flex-col gap-6 rounded-xl border border-gray-200 py-12 shadow-sm text-center">
+                            <div class="px-6">
+                                <p class="text-lg text-gray-500">Aucune salle trouvée</p>
+                                <c:if test="${sessionScope.user.role.name() == 'ADMIN'}">
+                                    <a href="${pageContext.request.contextPath}/salles/new" 
+                                       class="text-blue-600 hover:underline font-medium mt-2 inline-block">
+                                        Créer la première salle
+                                    </a>
+                                </c:if>
+                            </div>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <c:forEach var="salle" items="${salles}">
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900">${salle.nom}</div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                            ${salle.type == 'COURS' ? 'bg-blue-100 text-blue-800' : 
-                                              salle.type == 'TP' ? 'bg-purple-100 text-purple-800' : 
-                                              'bg-green-100 text-green-800'}">
-                                            ${salle.type}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        ${salle.capacite} places
-                                    </td>
-                                    <td class="px-6 py-4 text-sm text-gray-500">
-                                        <c:choose>
-                                            <c:when test="${not empty salle.equipements}">
-                                                ${salle.equipements.length() > 50 ? salle.equipements.substring(0, 50).concat('...') : salle.equipements}
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="text-gray-400 italic">Aucun</span>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <c:choose>
-                                            <c:when test="${salle.disponible}">
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                    ✓ Disponible
-                                                </span>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                                    ✗ Non disponible
-                                                </span>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                        <a href="${pageContext.request.contextPath}/salles/view?id=${salle.id}" 
-                                           class="text-indigo-600 hover:text-indigo-900">👁️ Voir</a>
-                                        <!-- Boutons Modifier/Supprimer visibles uniquement pour ADMIN -->
-                                        <c:if test="${sessionScope.user.role.name() == 'ADMIN'}">
-                                            <a href="${pageContext.request.contextPath}/salles/edit?id=${salle.id}" 
-                                               class="text-blue-600 hover:text-blue-900">✏️ Modifier</a>
-                                            <a href="${pageContext.request.contextPath}/salles/delete?id=${salle.id}" 
+                                <!-- Room Card -->
+                                <div class="relative">
+                                    <div class="bg-white flex flex-col gap-6 rounded-xl border border-gray-200 py-6 shadow-sm hover:border-gray-300 transition overflow-hidden">
+                                        <!-- Room Header with Type Badge -->
+                                        <div class="h-40 
+                                            ${salle.type == 'COURS' ? 'bg-gradient-to-br from-blue-100 to-blue-200' : 
+                                              salle.type == 'TP' ? 'bg-gradient-to-br from-purple-100 to-purple-200' : 
+                                              'bg-gradient-to-br from-green-100 to-green-200'}
+                                            flex items-center justify-center relative">
+                                            <div class="text-center">
+                                                <div class="text-4xl font-bold 
+                                                    ${salle.type == 'COURS' ? 'text-blue-400' : 
+                                                      salle.type == 'TP' ? 'text-purple-400' : 
+                                                      'text-green-400'}">
+                                                    ${salle.nom.substring(0, 1).toUpperCase()}
+                                                </div>
+                                                <p class="text-xs mt-2
+                                                    ${salle.type == 'COURS' ? 'text-blue-600' : 
+                                                      salle.type == 'TP' ? 'text-purple-600' : 
+                                                      'text-green-600'}">
+                                                    ${salle.nom}
+                                                </p>
+                                            </div>
+                                            <div class="absolute top-3 right-3">
+                                                <c:choose>
+                                                    <c:when test="${salle.disponible}">
+                                                        <span class="text-xs px-2 py-1 rounded font-medium border bg-green-100 text-green-800 border-green-200">
+                                                            Disponible
+                                                        </span>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <span class="text-xs px-2 py-1 rounded font-medium border bg-gray-100 text-gray-600 border-gray-200">
+                                                            Non disponible
+                                                        </span>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </div>
+                                        </div>
+
+                                        <div class="px-6 pt-0 space-y-3">
+                                            <div class="space-y-2">
+                                                <div class="flex items-center gap-2 text-gray-700">
+                                                    <i class="fas fa-door-open w-4 h-4 text-gray-500"></i>
+                                                    <span class="text-sm font-semibold">${salle.nom}</span>
+                                                </div>
+                                                <div class="flex items-center gap-2 text-gray-700">
+                                                    <i class="fas fa-users w-4 h-4 text-gray-500"></i>
+                                                    <span class="text-sm">Capacité: ${salle.capacite} personnes</span>
+                                                </div>
+                                                <div class="flex items-center gap-2 text-gray-700">
+                                                    <i class="fas fa-tag w-4 h-4 text-gray-500"></i>
+                                                    <span class="text-xs px-2 py-1 rounded font-medium
+                                                        ${salle.type == 'COURS' ? 'bg-blue-100 text-blue-800' : 
+                                                          salle.type == 'TP' ? 'bg-purple-100 text-purple-800' : 
+                                                          'bg-green-100 text-green-800'}">
+                                                        ${salle.type}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <c:if test="${not empty salle.equipements}">
+                                                <div class="space-y-2">
+                                                    <div class="flex items-center gap-2 text-gray-700">
+                                                        <i class="fas fa-bolt w-4 h-4 text-yellow-500"></i>
+                                                        <span class="text-xs text-gray-500">Équipements</span>
+                                                    </div>
+                                                    <p class="text-xs text-gray-600">
+                                                        ${salle.equipements.length() > 80 ? salle.equipements.substring(0, 80).concat('...') : salle.equipements}
+                                                    </p>
+                                                </div>
+                                            </c:if>
+
+                                            <a href="${pageContext.request.contextPath}/salles/view?id=${salle.id}"
+                                               class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-9 px-4 py-2 w-full border border-gray-300 bg-white text-gray-700 hover:bg-gray-50">
+                                                Voir détails
+                                            </a>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Admin Actions -->
+                                    <c:if test="${sessionScope.user.role.name() == 'ADMIN'}">
+                                        <div class="absolute top-3 left-3 flex gap-2">
+                                            <a href="${pageContext.request.contextPath}/salles/edit?id=${salle.id}"
+                                               class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-8 px-3 border border-gray-300 bg-white/90 text-gray-700 hover:bg-white gap-1">
+                                                <i class="fas fa-edit w-3 h-3"></i>
+                                                Modifier
+                                            </a>
+                                            <a href="${pageContext.request.contextPath}/salles/delete?id=${salle.id}"
                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette salle ?')"
-                                               class="text-red-600 hover:text-red-900">🗑️ Supprimer</a>
-                                        </c:if>
-                                    </td>
-                                </tr>
+                                               class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-8 px-3 bg-red-600 hover:bg-red-700 text-white gap-1">
+                                                <i class="fas fa-trash w-3 h-3"></i>
+                                                Supprimer
+                                            </a>
+                                        </div>
+                                    </c:if>
+                                </div>
                             </c:forEach>
-                        </tbody>
-                    </table>
-                    
-                    <!-- Statistiques -->
-                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
-                        <p class="text-sm text-gray-600">
-                            <strong>${salles.size()}</strong> salle(s) trouvée(s)
-                        </p>
-                    </div>
-                </c:otherwise>
-            </c:choose>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
+            </div>
         </div>
     </div>
+</div>
 
 <jsp:include page="../common/footer.jsp"/>
-
