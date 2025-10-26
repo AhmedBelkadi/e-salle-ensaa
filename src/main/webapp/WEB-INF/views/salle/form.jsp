@@ -95,38 +95,6 @@
                     <p class="text-xs text-gray-500">Nombre de places disponibles</p>
                 </div>
 
-                <!-- Batiment -->
-                <div class="space-y-2">
-                    <label for="batiment" class="text-gray-700 font-medium text-sm">
-                        Bâtiment <span class="text-red-600">*</span>
-                    </label>
-                    <input 
-                        type="text" 
-                        id="batiment" 
-                        name="batiment" 
-                        required
-                        placeholder="Ex: Bâtiment A"
-                        value="${not empty salle ? salle.batiment : batiment}"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-gray-900 placeholder:text-gray-500 text-sm outline-none"
-                    >
-                </div>
-
-                <!-- Étage -->
-                <div class="space-y-2">
-                    <label for="etage" class="text-gray-700 font-medium text-sm">
-                        Étage <span class="text-red-600">*</span>
-                    </label>
-                    <input 
-                        type="text" 
-                        id="etage" 
-                        name="etage" 
-                        required
-                        placeholder="Ex: 1er étage"
-                        value="${not empty salle ? salle.etage : etage}"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-gray-900 placeholder:text-gray-500 text-sm outline-none"
-                    >
-                </div>
-
                 <!-- Équipements -->
                 <div class="space-y-2">
                     <label for="equipements" class="text-gray-700 font-medium text-sm">
