@@ -45,6 +45,9 @@ public class HibernateConfig {
         // Module Auth & Users
         configuration.addAnnotatedClass(com.esalle.features.auth.domain.User.class);
         
+        // Module Salle
+        configuration.addAnnotatedClass(com.esalle.features.salle.domain.Salle.class);
+        
         return configuration;
     }
 }
