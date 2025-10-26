@@ -60,6 +60,26 @@
         <filter-name>CharacterEncodingFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
+
+    <!-- Authentication Filter - Vérifie que l'utilisateur est connecté -->
+    <filter>
+        <filter-name>AuthFilter</filter-name>
+        <filter-class>com.esalle.shared.filter.AuthFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!-- Role-Based Access Control Filter - Vérifie les permissions par rôle -->
+    <filter>
+        <filter-name>RoleFilter</filter-name>
+        <filter-class>com.esalle.shared.filter.RoleFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>RoleFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
     
     <!-- Global Exception Handler Filter -->
     <filter>
