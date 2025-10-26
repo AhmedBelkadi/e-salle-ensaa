@@ -93,6 +93,10 @@ public class Salle {
         return disponible;
     }
     
+    public boolean isDisponible() {
+        return disponible != null && disponible;
+    }
+    
     public void setDisponible(Boolean disponible) {
         this.disponible = disponible;
     }

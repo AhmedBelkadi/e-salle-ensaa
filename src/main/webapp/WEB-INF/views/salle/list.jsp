@@ -14,23 +14,20 @@
             </a>
         </div>
 
-        <!-- Messages -->
-        <c:if test="${not empty param.success}">
+        <!-- Messages de succès -->
+        <c:if test="${not empty sessionScope.success}">
             <div class="mb-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded">
-                <p class="font-medium">✅ ${param.success}</p>
+                <p class="font-medium">✅ ${sessionScope.success}</p>
             </div>
+            <c:remove var="success" scope="session"/>
         </c:if>
 
-        <c:if test="${not empty param.error}">
+        <!-- Messages d'erreur -->
+        <c:if test="${not empty sessionScope.error}">
             <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
-                <p class="font-medium">❌ ${param.error}</p>
+                <p class="font-medium">❌ ${sessionScope.error}</p>
             </div>
-        </c:if>
-
-        <c:if test="${not empty error}">
-            <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
-                <p class="font-medium">❌ ${error}</p>
-            </div>
+            <c:remove var="error" scope="session"/>
         </c:if>
 
         <!-- Filtres et recherche -->

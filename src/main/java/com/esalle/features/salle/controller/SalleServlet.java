@@ -101,30 +101,28 @@ public class SalleServlet extends HttpServlet {
         String disponibleFilter = request.getParameter("disponible");
         String capaciteMinStr = request.getParameter("capaciteMin");
         
-        List<Salle> salles;
-        
-        // Appliquer les filtres
+        // Convertir les filtres
+        Salle.TypeSalle type = null;
         if (typeFilter != null && !typeFilter.isEmpty()) {
-            Salle.TypeSalle type = Salle.TypeSalle.valueOf(typeFilter);
-            if (disponibleFilter != null && !disponibleFilter.isEmpty()) {
-                Boolean disponible = Boolean.valueOf(disponibleFilter);
-                salles = salleService.findByTypeAndDisponible(type, disponible);
-            } else {
-                salles = salleService.findByType(type);
-            }
-        } else if (disponibleFilter != null && !disponibleFilter.isEmpty()) {
-            Boolean disponible = Boolean.valueOf(disponibleFilter);
-            if (disponible) {
-                salles = salleService.findDisponibles();
-            } else {
-                salles = salleService.findAll();
-            }
-        } else if (capaciteMinStr != null && !capaciteMinStr.isEmpty()) {
-            Integer capaciteMin = Integer.parseInt(capaciteMinStr);
-            salles = salleService.findByCapaciteMin(capaciteMin);
-        } else {
-            salles = salleService.findAll();
+            type = Salle.TypeSalle.valueOf(typeFilter);
         }
+        
+        Integer capaciteMin = null;
+        if (capaciteMinStr != null && !capaciteMinStr.isEmpty()) {
+            try {
+                capaciteMin = Integer.parseInt(capaciteMinStr);
+            } catch (NumberFormatException e) {
+                log("Invalid capaciteMin: " + capaciteMinStr);
+            }
+        }
+        
+        Boolean disponible = null;
+        if (disponibleFilter != null && !disponibleFilter.isEmpty()) {
+            disponible = Boolean.valueOf(disponibleFilter);
+        }
+        
+        // Utiliser la méthode filterSalles du service
+        List<Salle> salles = salleService.filterSalles(type, capaciteMin, disponible, null);
         
         request.setAttribute("salles", salles);
         request.setAttribute("typeFilter", typeFilter);
@@ -138,7 +136,8 @@ public class SalleServlet extends HttpServlet {
             throws ServletException, IOException {
         String keyword = request.getParameter("keyword");
         
-        List<Salle> salles = salleService.search(keyword);
+        // Utiliser filterSalles avec searchNom
+        List<Salle> salles = salleService.filterSalles(null, null, null, keyword);
         
         request.setAttribute("salles", salles);
         request.setAttribute("keyword", keyword);
@@ -150,13 +149,13 @@ public class SalleServlet extends HttpServlet {
             throws ServletException, IOException {
         Long id = Long.parseLong(request.getParameter("id"));
         
-        Optional<Salle> salleOpt = salleService.findById(id);
+        Optional<Salle> salleOpt = salleService.getSalleById(id);
         if (salleOpt.isPresent()) {
             request.setAttribute("salle", salleOpt.get());
             request.getRequestDispatcher("/WEB-INF/views/salle/view.jsp").forward(request, response);
         } else {
-            request.setAttribute("error", "Salle introuvable");
-            listSalles(request, response);
+            request.getSession().setAttribute("error", "Salle introuvable");
+            response.sendRedirect(request.getContextPath() + "/salles/list");
         }
     }
     
@@ -169,13 +168,13 @@ public class SalleServlet extends HttpServlet {
             throws ServletException, IOException {
         Long id = Long.parseLong(request.getParameter("id"));
         
-        Optional<Salle> salleOpt = salleService.findById(id);
+        Optional<Salle> salleOpt = salleService.getSalleById(id);
         if (salleOpt.isPresent()) {
             request.setAttribute("salle", salleOpt.get());
             request.getRequestDispatcher("/WEB-INF/views/salle/form.jsp").forward(request, response);
         } else {
-            request.setAttribute("error", "Salle introuvable");
-            listSalles(request, response);
+            request.getSession().setAttribute("error", "Salle introuvable");
+            response.sendRedirect(request.getContextPath() + "/salles/list");
         }
     }
     
@@ -206,18 +205,31 @@ public class SalleServlet extends HttpServlet {
         salle.setEquipements(equipements != null ? equipements.trim() : null);
         
         // Enregistrer
-        Salle savedSalle = salleService.create(salle);
+        Salle savedSalle = salleService.saveSalle(salle);
         
         log("Salle created: " + savedSalle.getNom() + " (ID: " + savedSalle.getId() + ")");
         
-        // Rediriger vers la liste avec message de succès
-        response.sendRedirect(request.getContextPath() + "/salles/list?success=Salle créée avec succès");
+        // Message de succès dans la session
+        request.getSession().setAttribute("success", "Salle créée avec succès");
+        
+        // Rediriger vers la liste
+        response.sendRedirect(request.getContextPath() + "/salles/list");
     }
     
     private void updateSalle(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Récupérer l'ID
         Long id = Long.parseLong(request.getParameter("id"));
+        
+        // Récupérer la salle existante
+        Optional<Salle> salleOpt = salleService.getSalleById(id);
+        if (!salleOpt.isPresent()) {
+            request.getSession().setAttribute("error", "Salle introuvable");
+            response.sendRedirect(request.getContextPath() + "/salles/list");
+            return;
+        }
+        
+        Salle salle = salleOpt.get();
         
         // Récupérer les paramètres
         String nom = request.getParameter("nom");
@@ -237,47 +249,55 @@ public class SalleServlet extends HttpServlet {
             throw new IllegalArgumentException("La capacité est obligatoire");
         }
         
-        // Créer la salle avec les nouvelles valeurs
-        Salle salle = new Salle();
+        // Mettre à jour les valeurs
         salle.setNom(nom.trim());
         salle.setType(Salle.TypeSalle.valueOf(typeStr));
         salle.setCapacite(Integer.parseInt(capaciteStr));
         salle.setEquipements(equipements != null ? equipements.trim() : null);
         salle.setDisponible(disponibleStr != null && disponibleStr.equals("true"));
         
-        // Mettre à jour
-        Salle updatedSalle = salleService.update(id, salle);
+        // Enregistrer
+        Salle updatedSalle = salleService.saveSalle(salle);
         
         log("Salle updated: " + updatedSalle.getNom() + " (ID: " + updatedSalle.getId() + ")");
         
-        // Rediriger vers la liste avec message de succès
-        response.sendRedirect(request.getContextPath() + "/salles/list?success=Salle modifiée avec succès");
+        // Message de succès dans la session
+        request.getSession().setAttribute("success", "Salle modifiée avec succès");
+        
+        // Rediriger vers la liste
+        response.sendRedirect(request.getContextPath() + "/salles/list");
     }
     
     private void deleteSalle(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         Long id = Long.parseLong(request.getParameter("id"));
         
-        boolean deleted = salleService.delete(id);
-        
-        if (deleted) {
+        try {
+            salleService.deleteSalle(id);
             log("Salle deleted: ID " + id);
-            response.sendRedirect(request.getContextPath() + "/salles/list?success=Salle supprimée avec succès");
-        } else {
-            response.sendRedirect(request.getContextPath() + "/salles/list?error=Erreur lors de la suppression");
+            request.getSession().setAttribute("success", "Salle supprimée avec succès");
+        } catch (Exception e) {
+            log("Error deleting salle: " + e.getMessage());
+            request.getSession().setAttribute("error", "Erreur lors de la suppression");
         }
+        
+        response.sendRedirect(request.getContextPath() + "/salles/list");
     }
     
     private void toggleDisponibilite(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         Long id = Long.parseLong(request.getParameter("id"));
-        Boolean disponible = Boolean.parseBoolean(request.getParameter("disponible"));
         
-        Salle salle = salleService.changeDisponibilite(id, disponible);
+        try {
+            Salle salle = salleService.toggleDisponibilite(id);
+            log("Salle disponibilite changed: " + salle.getNom() + " -> " + salle.isDisponible());
+            request.getSession().setAttribute("success", "Disponibilité modifiée");
+        } catch (Exception e) {
+            log("Error toggling disponibilite: " + e.getMessage());
+            request.getSession().setAttribute("error", "Erreur lors de la modification");
+        }
         
-        log("Salle disponibilite changed: " + salle.getNom() + " -> " + disponible);
-        
-        response.sendRedirect(request.getContextPath() + "/salles/list?success=Disponibilité modifiée");
+        response.sendRedirect(request.getContextPath() + "/salles/list");
     }
     
     private String getAction(HttpServletRequest request) {
