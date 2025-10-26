@@ -191,6 +191,26 @@ public class Reclamation {
         return null;
     }
 
+    /**
+     * Formate la date de création (ex: "26/10/2025 à 13:27")
+     */
+    public String getDateCreationFormatee() {
+        if (dateCreation == null) {
+            return "";
+        }
+        return dateCreation.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm"));
+    }
+
+    /**
+     * Formate la date de traitement (ex: "26/10/2025 à 14:30")
+     */
+    public String getDateTraitementFormatee() {
+        if (dateTraitement == null) {
+            return "";
+        }
+        return dateTraitement.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm"));
+    }
+
     // Getters and Setters
 
     public Long getId() {

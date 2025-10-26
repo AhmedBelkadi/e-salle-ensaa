@@ -21,9 +21,14 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     Salle concernée <span class="text-red-500">*</span>
                 </label>
-                <input type="number" name="salleId" value="${salleId}" 
-                       class="w-full px-4 py-2 border rounded-lg" 
-                       placeholder="ID de la salle" required>
+                <select name="salleId" class="w-full px-4 py-2 border rounded-lg" required>
+                    <option value="">-- Sélectionner une salle --</option>
+                    <c:forEach var="salle" items="${salles}">
+                        <option value="${salle.id}" ${salleId == salle.id ? 'selected' : ''}>
+                            ${salle.nom} (${salle.typeSalle} - Capacité: ${salle.capacite})
+                        </option>
+                    </c:forEach>
+                </select>
             </div>
 
             <div class="mb-4">

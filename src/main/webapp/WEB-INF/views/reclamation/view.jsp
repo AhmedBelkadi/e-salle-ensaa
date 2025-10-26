@@ -52,10 +52,17 @@
             <p class="mt-2">${reclamation.description}</p>
         </div>
 
+        <div class="mt-4 pt-4 border-t">
+            <p class="text-sm text-gray-500">Date de création</p>
+            <p class="font-medium">${reclamation.dateCreationFormatee}</p>
+        </div>
+
         <c:if test="${reclamation.traitee}">
             <div class="mt-4 pt-4 border-t">
                 <p class="text-sm text-gray-500">Traité par</p>
                 <p class="font-semibold">${reclamation.traiteParNom}</p>
+                <p class="text-sm text-gray-500 mt-2">Date de traitement</p>
+                <p class="font-medium">${reclamation.dateTraitementFormatee}</p>
                 <p class="text-sm text-gray-500 mt-2">Commentaire</p>
                 <p>${reclamation.commentaireTraitement}</p>
             </div>

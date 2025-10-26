@@ -15,7 +15,6 @@ import com.esalle.features.salle.repository.SalleRepositoryImpl;
 import com.esalle.shared.exception.ApplicationException;
 import com.esalle.shared.service.NotificationService;
 import com.esalle.shared.service.NotificationServiceImpl;
-import com.esalle.shared.util.HibernateUtil;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -49,13 +48,14 @@ import java.util.List;
 public class ReclamationServlet extends HttpServlet {
 
     private ReclamationService reclamationService;
+    private SalleRepository salleRepository;
 
     @Override
     public void init() throws ServletException {
         super.init();
         ReclamationRepository reclamationRepository = new ReclamationRepositoryImpl();
         UserRepository userRepository = new UserRepositoryImpl();
-        SalleRepository salleRepository = new SalleRepositoryImpl();
+        this.salleRepository = new SalleRepositoryImpl();
         NotificationService notificationService = new NotificationServiceImpl();
         
         this.reclamationService = new ReclamationServiceImpl(
@@ -183,6 +183,9 @@ public class ReclamationServlet extends HttpServlet {
     private void handleNew(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        // Charger la liste de toutes les salles pour le select
+        request.setAttribute("salles", salleRepository.findAll());
+        
         request.getRequestDispatcher("/WEB-INF/views/reclamation/form.jsp").forward(request, response);
     }
 
@@ -231,6 +234,9 @@ public class ReclamationServlet extends HttpServlet {
             request.setAttribute("salleId", salleIdParam);
             request.setAttribute("description", description);
             request.setAttribute("urgence", urgenceParam);
+            
+            // Recharger la liste des salles en cas d'erreur
+            request.setAttribute("salles", salleRepository.findAll());
             
             request.getRequestDispatcher("/WEB-INF/views/reclamation/form.jsp").forward(request, response);
         }

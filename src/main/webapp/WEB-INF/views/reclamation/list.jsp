@@ -10,10 +10,13 @@
         <h2 class="text-3xl font-bold text-gray-800">
             ${isUserView ? 'Mes Réclamations' : 'Gestion des Réclamations'}
         </h2>
-        <a href="${pageContext.request.contextPath}/reclamations/new" 
-           class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition">
-            ➕ Nouvelle Réclamation
-        </a>
+        <!-- Le bouton n'est pas affiché si l'utilisateur est un ADMIN -->
+        <c:if test="${sessionScope.user.role != 'ADMIN'}">
+            <a href="${pageContext.request.contextPath}/reclamations/new" 
+               class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition">
+                ➕ Nouvelle Réclamation
+            </a>
+        </c:if>
     </div>
 
     <!-- Messages -->
@@ -81,7 +84,7 @@
                                         ${recla.statutLibelle}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-sm">${recla.dateCreation}</td>
+                                <td class="px-6 py-4 text-sm">${recla.dateCreationFormatee}</td>
                                 <td class="px-6 py-4">
                                     <a href="${pageContext.request.contextPath}/reclamations/view?id=${recla.id}" 
                                        class="text-indigo-600 hover:text-indigo-900">Voir</a>
