@@ -1,91 +1,53 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-
-<jsp:include page="../common/header.jsp">
-    <jsp:param name="title" value="Erreur - E-Salle ENSAA"/>
-</jsp:include>
-
-<div class="container mx-auto px-4 py-16">
-    <div class="max-w-3xl mx-auto">
-        <!-- Error Header -->
-        <div class="bg-red-600 text-white rounded-t-2xl shadow-xl p-6">
-            <div class="flex items-center">
-                <div class="text-4xl mr-4">⚠️</div>
-                <h1 class="text-2xl font-bold">Erreur Système</h1>
-            </div>
-        </div>
-
-        <!-- Error Body -->
-        <div class="bg-white rounded-b-2xl shadow-xl p-8">
-            <!-- Error Message -->
-            <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-6 mb-8">
-                <div class="flex items-start">
-                    <div class="text-3xl mr-4">❌</div>
-                    <div class="flex-1">
-                        <h2 class="text-xl font-bold text-red-800 mb-2">
-                            Une erreur s'est produite
-                        </h2>
-                        <c:choose>
-                            <c:when test="${not empty errorMessage}">
-                                <p class="text-red-700 font-medium">${errorMessage}</p>
-                            </c:when>
-                            <c:otherwise>
-                                <p class="text-red-700 font-medium">
-                                    Une erreur inattendue s'est produite lors du traitement de votre demande.
-                                </p>
-                            </c:otherwise>
-                        </c:choose>
-                    </div>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erreur - E-Salle ENSAA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-gray-100 p-4">
+        <div class="text-center max-w-md">
+            <!-- Error Icon -->
+            <div class="mb-8">
+                <div class="inline-flex items-center justify-center w-24 h-24 bg-orange-100 rounded-full">
+                    <i class="fas fa-exclamation-circle w-12 h-12 text-orange-600"></i>
                 </div>
             </div>
 
-            <!-- What to do -->
-            <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-                <h3 class="text-lg font-semibold text-blue-800 mb-4 flex items-center">
-                    <span class="text-2xl mr-2">💡</span>
-                    Que pouvez-vous faire ?
-                </h3>
-                <ul class="space-y-3 text-gray-700">
-                    <li class="flex items-start">
-                        <span class="bg-blue-200 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">1</span>
-                        <span>Vérifiez que l'URL est correcte</span>
-                    </li>
-                    <li class="flex items-start">
-                        <span class="bg-blue-200 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">2</span>
-                        <span>Réessayez dans quelques instants</span>
-                    </li>
-                    <li class="flex items-start">
-                        <span class="bg-blue-200 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">3</span>
-                        <span>Contactez l'administrateur si le problème persiste</span>
-                    </li>
-                </ul>
-            </div>
+            <!-- Error Message -->
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Une erreur est survenue</h1>
+            <p class="text-gray-600 mb-2">
+                <% 
+                    String message = (String) request.getAttribute("errorMessage");
+                    if (message == null || message.isEmpty()) {
+                        message = request.getParameter("message");
+                    }
+                    if (message == null || message.isEmpty()) {
+                        message = "Une erreur inattendue s'est produite.";
+                    }
+                %>
+                <%= message %>
+            </p>
 
-            <!-- Technical Details (if available) -->
-            <c:if test="${not empty exception}">
-                <details class="bg-gray-50 rounded-xl p-6 mb-8">
-                    <summary class="cursor-pointer font-semibold text-gray-700 hover:text-gray-900">
-                        🔧 Détails techniques (pour les développeurs)
-                    </summary>
-                    <div class="mt-4 p-4 bg-gray-100 rounded-lg overflow-x-auto">
-                        <pre class="text-sm text-gray-800">${exception}</pre>
-                    </div>
-                </details>
-            </c:if>
-
-            <!-- Action Buttons -->
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="${pageContext.request.contextPath}/" 
-                   class="bg-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition transform hover:-translate-y-1 shadow-lg text-center">
-                    🏠 Retour à l'accueil
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+                <a href="<%= request.getContextPath() %>/auth/login" 
+                   class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white transition">
+                    <i class="fas fa-sign-in-alt w-4 h-4"></i>
+                    Page de connexion
                 </a>
-                <button onclick="history.back()" 
-                        class="bg-white text-gray-700 border-2 border-gray-300 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition transform hover:-translate-y-1 shadow-lg">
-                    ← Page précédente
+                <button 
+                    onclick="history.back()"
+                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-10 px-6 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition">
+                    <i class="fas fa-arrow-left w-4 h-4"></i>
+                    Page précédente
                 </button>
             </div>
         </div>
     </div>
-</div>
-
-<jsp:include page="../common/footer.jsp"/>
+</body>
+</html>

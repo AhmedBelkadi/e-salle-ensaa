@@ -6,6 +6,8 @@
 <hibernate-configuration>
     <session-factory>
         <!-- Database connection settings -->
+        <!-- For Local: use localhost:5432 -->
+        <!-- For Docker: use postgres:5432 -->
         <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
         <property name="hibernate.connection.url">jdbc:postgresql://postgres:5432/esalle_ensaa</property>
         <property name="hibernate.connection.username">postgres</property>
@@ -32,8 +34,19 @@
         <property name="hibernate.c3p0.max_statements">50</property>
         
         <!-- Entity mappings -->
-        <!-- Module Auth & Users -->
-        <mapping class="com.esalle.features.auth.domain.User"/>
+        <!-- Module Auth & Users (Dev1) -->
+        <mapping class="com.esalle.entity.User"/>
+        <mapping class="com.esalle.entity.Filiere"/>
+        <mapping class="com.esalle.entity.Reclamation"/>
+        <mapping class="com.esalle.entity.Salle"/>
+        
+        <!-- Module Dev2 -->
+        <mapping class="com.esalle.entity.Matiere"/>
+        <mapping class="com.esalle.entity.EmploiDuTemps"/>
+        <mapping class="com.esalle.entity.Reservation"/>
+        
+        <!-- Audit & Workflow -->
+        <mapping class="com.esalle.entity.AuditLog"/>
         
     </session-factory>
 </hibernate-configuration>
