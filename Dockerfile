@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for E-Salle ENSAA
-FROM maven:3.8.6-openjdk-11-slim AS build
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
 # Set working directory
 WORKDIR /app
@@ -15,7 +15,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Runtime stage
-FROM tomcat:9.0-jdk11-openjdk-slim
+FROM tomcat:10.1-jdk17-temurin-jammy
 
 # Install PostgreSQL client for health checks
 RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
