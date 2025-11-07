@@ -1,5 +1,4 @@
 package com.esalle.exception;
-
 /**
  * Exception levée quand une ressource n'est pas trouvée
  */
