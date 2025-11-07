@@ -36,6 +36,11 @@ Thumbs.db
 uploads/
 temp/
 
+# Report (LaTeX - not for production)
+report/
+
+# UI Template
+ui-templete/
 # Docker
 docker/ssl/*.key
 docker/ssl/*.crt
@@ -51,3 +56,19 @@ application-local.properties
 *.jar
 *.war
 *.ear
+
+*.md
+*.bat
+*.sh
+*.ps1
+*.txt
+*.pdf
+*.docx
+*.doc
+*.xls
+*.xlsx
+*.pptx
+*.ppt
+*.odt
+*.odp
+*.ods
