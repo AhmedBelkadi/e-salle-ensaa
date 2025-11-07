@@ -1,7 +1,6 @@
-package com.esalle.features.auth.repository;
+package com.esalle.repository;
 
-import com.esalle.core.base.BaseRepository;
-import com.esalle.features.auth.domain.User;
+import com.esalle.entity.User;
 import java.util.Optional;
 import java.util.List;
 

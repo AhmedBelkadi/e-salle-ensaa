@@ -1,7 +1,6 @@
-package com.esalle.features.auth.repository;
+package com.esalle.repository;
 
-import com.esalle.core.base.BaseRepositoryImpl;
-import com.esalle.features.auth.domain.User;
+import com.esalle.entity.User;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 
