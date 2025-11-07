@@ -46,7 +46,7 @@
     <!-- Character Encoding Filter -->
     <filter>
         <filter-name>CharacterEncodingFilter</filter-name>
-        <filter-class>com.esalle.shared.filter.CharacterEncodingFilter</filter-class>
+        <filter-class>com.esalle.filter.CharacterEncodingFilter</filter-class>
         <init-param>
             <param-name>encoding</param-name>
             <param-value>UTF-8</param-value>
@@ -60,11 +60,31 @@
         <filter-name>CharacterEncodingFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
+
+    <!-- Authentication Filter - Vérifie que l'utilisateur est connecté -->
+    <filter>
+        <filter-name>AuthFilter</filter-name>
+        <filter-class>com.esalle.filter.AuthFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>AuthFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!-- Role-Based Access Control Filter - Vérifie les permissions par rôle -->
+    <filter>
+        <filter-name>RoleFilter</filter-name>
+        <filter-class>com.esalle.filter.RoleFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>RoleFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
     
     <!-- Global Exception Handler Filter -->
     <filter>
         <filter-name>ExceptionHandlerFilter</filter-name>
-        <filter-class>com.esalle.shared.filter.ExceptionHandlerFilter</filter-class>
+        <filter-class>com.esalle.filter.ExceptionHandlerFilter</filter-class>
     </filter>
     
     <filter-mapping>
@@ -75,7 +95,7 @@
     <!-- Error Servlet -->
     <servlet>
         <servlet-name>ErrorServlet</servlet-name>
-        <servlet-class>com.esalle.shared.controller.ErrorServlet</servlet-class>
+        <servlet-class>com.esalle.controller.ErrorServlet</servlet-class>
     </servlet>
     
     <servlet-mapping>
@@ -86,7 +106,7 @@
     <!-- CORS Filter -->
     <filter>
         <filter-name>CorsFilter</filter-name>
-        <filter-class>com.esalle.shared.filter.CorsFilter</filter-class>
+        <filter-class>com.esalle.filter.CorsFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>CorsFilter</filter-name>
@@ -96,7 +116,7 @@
     <!-- Request Logging Filter -->
     <filter>
         <filter-name>RequestLoggingFilter</filter-name>
-        <filter-class>com.esalle.shared.filter.RequestLoggingFilter</filter-class>
+        <filter-class>com.esalle.filter.RequestLoggingFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>RequestLoggingFilter</filter-name>
@@ -109,14 +129,19 @@
         <param-value>messages</param-value>
     </context-param>
 
+    <!-- JSTL Configuration -->
+    <context-param>
+        <param-name>jakarta.servlet.jsp.jstl.fmt.localizationContext</param-name>
+        <param-value>messages</param-value>
+    </context-param>
+
     <!-- JSP Configuration -->
     <jsp-config>
         <jsp-property-group>
             <url-pattern>*.jsp</url-pattern>
             <page-encoding>UTF-8</page-encoding>
             <scripting-invalid>false</scripting-invalid>
-            <include-prelude>/WEB-INF/views/common/header.jsp</include-prelude>
-            <include-coda>/WEB-INF/views/common/footer.jsp</include-coda>
+            <!-- Header and footer are now manually included in each JSP -->
         </jsp-property-group>
     </jsp-config>
 
