@@ -26,6 +26,22 @@ public class MatiereRepositoryImpl extends BaseRepositoryImpl<Matiere, Long> imp
     }
 
     @Override
+    public List<Matiere> findByFiliereIds(List<Long> filiereIds) {
+        Session session = sessionFactory.openSession();
+        try {
+            if (filiereIds == null || filiereIds.isEmpty()) {
+                return java.util.Collections.emptyList();
+            }
+            Query<Matiere> query = session.createQuery(
+                "FROM Matiere WHERE filiereId IN :filiereIds ORDER BY nom", Matiere.class);
+            query.setParameter("filiereIds", filiereIds);
+            return query.list();
+        } finally {
+            session.close();
+        }
+    }
+
+    @Override
     public List<Matiere> findByProfesseurId(Long professeurId) {
         Session session = sessionFactory.openSession();
         try {

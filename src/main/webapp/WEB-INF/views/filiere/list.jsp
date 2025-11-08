@@ -195,6 +195,8 @@
                                                class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-9 px-3 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50">
                                                 <i class="fas fa-edit w-3 h-3"></i>
                                             </a>
+                                        </c:if>
+                                        <c:if test="${sessionScope.user.role.name() == 'ADMIN'}">
                                             <a href="${pageContext.request.contextPath}/filieres/delete?id=${filiere.id}"
                                                onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette filière ?')"
                                                class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-9 px-3 bg-red-600 hover:bg-red-700 text-white">
