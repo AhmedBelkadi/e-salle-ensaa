@@ -18,7 +18,7 @@ public class ReservationRepositoryImpl extends BaseRepositoryImpl<Reservation, L
         Session session = sessionFactory.openSession();
         try {
             Query<Reservation> query = session.createQuery(
-                "FROM Reservation WHERE userId = :userId ORDER BY dateReservation DESC, heureDebut", Reservation.class);
+                "FROM " + com.esalle.entity.Reservation.class.getName() + " WHERE userId = :userId ORDER BY dateReservation DESC, heureDebut", Reservation.class);
             query.setParameter("userId", userId);
             return query.list();
         } finally {
@@ -31,7 +31,7 @@ public class ReservationRepositoryImpl extends BaseRepositoryImpl<Reservation, L
         Session session = sessionFactory.openSession();
         try {
             Query<Reservation> query = session.createQuery(
-                "FROM Reservation WHERE salleId = :salleId ORDER BY dateReservation DESC, heureDebut", Reservation.class);
+                "FROM " + com.esalle.entity.Reservation.class.getName() + " WHERE salleId = :salleId ORDER BY dateReservation DESC, heureDebut", Reservation.class);
             query.setParameter("salleId", salleId);
             return query.list();
         } finally {
@@ -44,7 +44,7 @@ public class ReservationRepositoryImpl extends BaseRepositoryImpl<Reservation, L
         Session session = sessionFactory.openSession();
         try {
             Query<Reservation> query = session.createQuery(
-                "FROM Reservation WHERE statut = :statut ORDER BY dateReservation DESC", Reservation.class);
+                "FROM " + com.esalle.entity.Reservation.class.getName() + " WHERE statut = :statut ORDER BY dateReservation DESC", Reservation.class);
             query.setParameter("statut", statut);
             return query.list();
         } finally {
@@ -58,7 +58,7 @@ public class ReservationRepositoryImpl extends BaseRepositoryImpl<Reservation, L
         try {
             // FIFO: Trier par priorité (desc) puis par date de création (asc)
             Query<Reservation> query = session.createQuery(
-                "FROM Reservation WHERE statut = :statut ORDER BY priorite DESC, dateCreation ASC", Reservation.class);
+                "FROM " + com.esalle.entity.Reservation.class.getName() + " WHERE statut = :statut ORDER BY priorite DESC, dateCreation ASC", Reservation.class);
             query.setParameter("statut", Reservation.StatutReservation.EN_ATTENTE);
             return query.list();
         } finally {
@@ -72,7 +72,7 @@ public class ReservationRepositoryImpl extends BaseRepositoryImpl<Reservation, L
         try {
             // Trouver les conflits: réservations approuvées qui se chevauchent
             Query<Reservation> query = session.createQuery(
-                "FROM Reservation WHERE salleId = :salleId AND dateReservation = :date " +
+                "FROM " + com.esalle.entity.Reservation.class.getName() + " WHERE salleId = :salleId AND dateReservation = :date " +
                 "AND statut = :statut " +
                 "AND ((heureDebut < :heureFin AND heureFin > :heureDebut)) " +
                 "ORDER BY heureDebut", Reservation.class);
@@ -92,7 +92,7 @@ public class ReservationRepositoryImpl extends BaseRepositoryImpl<Reservation, L
         Session session = sessionFactory.openSession();
         try {
             Query<Reservation> query = session.createQuery(
-                "FROM Reservation WHERE dateReservation = :date ORDER BY heureDebut", Reservation.class);
+                "FROM " + com.esalle.entity.Reservation.class.getName() + " WHERE dateReservation = :date ORDER BY heureDebut", Reservation.class);
             query.setParameter("date", date);
             return query.list();
         } finally {
@@ -105,7 +105,7 @@ public class ReservationRepositoryImpl extends BaseRepositoryImpl<Reservation, L
         Session session = sessionFactory.openSession();
         try {
             Query<Reservation> query = session.createQuery(
-                "FROM Reservation WHERE salleId = :salleId AND dateReservation = :date " +
+                "FROM " + com.esalle.entity.Reservation.class.getName() + " WHERE salleId = :salleId AND dateReservation = :date " +
                 "AND statut = :statut ORDER BY heureDebut", Reservation.class);
             query.setParameter("salleId", salleId);
             query.setParameter("date", date);
@@ -121,7 +121,7 @@ public class ReservationRepositoryImpl extends BaseRepositoryImpl<Reservation, L
         Session session = sessionFactory.openSession();
         try {
             Query<Reservation> query = session.createQuery(
-                "FROM Reservation WHERE salleId = :salleId AND statut = :statut " +
+                "FROM " + com.esalle.entity.Reservation.class.getName() + " WHERE salleId = :salleId AND statut = :statut " +
                 "ORDER BY dateReservation, heureDebut", Reservation.class);
             query.setParameter("salleId", salleId);
             query.setParameter("statut", Reservation.StatutReservation.APPROUVEE);
@@ -136,7 +136,7 @@ public class ReservationRepositoryImpl extends BaseRepositoryImpl<Reservation, L
         Session session = sessionFactory.openSession();
         try {
             Query<Reservation> query = session.createQuery(
-                "FROM Reservation WHERE typeReservateur = :type ORDER BY dateReservation DESC", Reservation.class);
+                "FROM " + com.esalle.entity.Reservation.class.getName() + " WHERE typeReservateur = :type ORDER BY dateReservation DESC", Reservation.class);
             query.setParameter("type", type);
             return query.list();
         } finally {
