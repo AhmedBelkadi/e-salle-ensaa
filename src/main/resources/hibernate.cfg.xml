@@ -7,9 +7,9 @@
     <session-factory>
         <!-- Database connection settings -->
         <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
-        <property name="hibernate.connection.url">jdbc:postgresql://postgres:5432/esalle_ensaa</property>
+        <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/esalle_ensaa</property>
         <property name="hibernate.connection.username">postgres</property>
-        <property name="hibernate.connection.password">password</property>
+        <property name="hibernate.connection.password">Bac14.83</property>
         
         <!-- Database dialect -->
         <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
@@ -32,8 +32,19 @@
         <property name="hibernate.c3p0.max_statements">50</property>
         
         <!-- Entity mappings -->
-        <!-- Add your entity mappings here -->
-        <!-- Example: <mapping class="com.esalle.features.MODULE.domain.YourEntity"/> -->
+        <!-- Module Auth & Users (Dev1) -->
+        <mapping class="com.esalle.entity.User"/>
+        <mapping class="com.esalle.entity.Filiere"/>
+        <mapping class="com.esalle.entity.Reclamation"/>
+        <mapping class="com.esalle.entity.Salle"/>
+        
+        <!-- Module Dev2 -->
+        <mapping class="com.esalle.entity.Matiere"/>
+        <mapping class="com.esalle.entity.EmploiDuTemps"/>
+        <mapping class="com.esalle.entity.Reservation"/>
+        
+        <!-- Audit & Workflow -->
+        <mapping class="com.esalle.entity.AuditLog"/>
         
     </session-factory>
 </hibernate-configuration>
