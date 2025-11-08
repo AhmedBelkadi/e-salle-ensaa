@@ -5,7 +5,6 @@
 </jsp:include>
 
 <div class="flex-1 p-6">
-    <div class="max-w-2xl mx-auto">
         <div class="space-y-6">
             <!-- Header -->
             <div>
@@ -119,7 +118,6 @@
                 </div>
             </form>
         </div>
-    </div>
 </div>
 
 <jsp:include page="../common/footer.jsp"/>

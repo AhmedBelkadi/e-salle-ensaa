@@ -13,7 +13,7 @@
                 <h1 class="text-3xl font-bold text-gray-900">Filières</h1>
                 <p class="text-gray-600 mt-2">Gérer les filières et programmes académiques</p>
             </div>
-            <c:if test="${sessionScope.user.role.name() == 'ADMIN' || sessionScope.user.role.name() == 'COORDINATEUR'}">
+            <c:if test="${sessionScope.user.role.name() == 'ADMIN'}">
                 <a href="${pageContext.request.contextPath}/filieres/new" 
                    class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium h-9 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white">
                     <i class="fas fa-plus w-4 h-4"></i>

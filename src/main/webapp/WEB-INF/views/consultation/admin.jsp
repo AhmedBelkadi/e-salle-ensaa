@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <jsp:include page="../common/header.jsp">
     <jsp:param name="title" value="Dashboard Admin - E-Salle ENSAA"/>
 </jsp:include>
@@ -140,12 +141,32 @@
                                 <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
                                     <div class="flex items-start justify-between">
                                         <div>
-                                            <h3 class="font-semibold text-gray-900">${reclamation.salleNom}</h3>
-                                            <p class="text-sm text-gray-600 mt-1">${reclamation.description.substring(0, Math.min(50, reclamation.description.length()))}...</p>
-                                            <p class="text-xs text-gray-500 mt-1">Par: ${reclamation.userNom}</p>
+                                            <h3 class="font-semibold text-gray-900">
+                                                <c:out value="${reclamation.salleNom}" default="N/A"/>
+                                            </h3>
+                                            <p class="text-sm text-gray-600 mt-1">
+                                                <c:choose>
+                                                    <c:when test="${not empty reclamation.description}">
+                                                        <c:choose>
+                                                            <c:when test="${fn:length(reclamation.description) > 50}">
+                                                                ${fn:substring(reclamation.description, 0, 50)}...
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                ${reclamation.description}
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        Aucune description
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </p>
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                Par: <c:out value="${reclamation.userNom}" default="Inconnu"/>
+                                            </p>
                                         </div>
                                         <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded border border-red-200">
-                                            ${reclamation.urgence}
+                                            <c:out value="${reclamation.urgence}" default="NORMALE"/>
                                         </span>
                                     </div>
                                 </div>
@@ -159,4 +180,3 @@
 </div>
 
 <jsp:include page="../common/footer.jsp"/>
-
