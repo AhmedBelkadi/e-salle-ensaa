@@ -9,8 +9,8 @@
         <div class="space-y-6">
             <!-- Header -->
             <div>
-                <h1 class="text-3xl font-bold text-gray-900">Nouvelle Séance</h1>
-                <p class="text-gray-600 mt-2">Créer une nouvelle séance dans l'emploi du temps</p>
+                <h1 class="text-3xl font-bold text-gray-900">${not empty emploi ? 'Modifier la Séance' : 'Nouvelle Séance'}</h1>
+                <p class="text-gray-600 mt-2">${not empty emploi ? 'Modifier une séance dans l\'emploi du temps' : 'Créer une nouvelle séance dans l\'emploi du temps'}</p>
             </div>
 
             <!-- Error Message -->
@@ -24,19 +24,51 @@
             <form method="POST" action="${pageContext.request.contextPath}/emploi/save" 
                   class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-6">
                 
-                <!-- Filière -->
-                <div>
-                    <label for="filiereId" class="block text-sm font-medium text-gray-700 mb-2">
-                        Filière <span class="text-red-500">*</span>
-                    </label>
-                    <select name="filiereId" id="filiereId" required onchange="updateMatieres()"
-                            class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Sélectionner une filière</option>
-                        <c:forEach var="filiere" items="${filieres}">
-                            <option value="${filiere.id}">${filiere.nom} - ${filiere.cycle} ${filiere.annee}</option>
-                        </c:forEach>
-                    </select>
-                </div>
+                <!-- Filière (cachée pour coordinateur, car automatiquement sa filière) -->
+                <c:choose>
+                    <c:when test="${isCoordinateur == true && not empty filieres}">
+                        <!-- Pour coordinateur, utiliser la première filière automatiquement (ou toutes si plusieurs) -->
+                        <c:if test="${filieres.size() == 1}">
+                            <input type="hidden" name="filiereId" id="filiereId" value="${filieres[0].id}">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Filière <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" value="${filieres[0].nom} - ${filieres[0].cycle} ${filieres[0].annee}" 
+                                       readonly
+                                       class="w-full rounded-md border border-gray-300 px-3 py-2 bg-gray-50 focus:outline-none">
+                            </div>
+                        </c:if>
+                        <c:if test="${filieres.size() > 1}">
+                            <div>
+                                <label for="filiereId" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Filière <span class="text-red-500">*</span>
+                                </label>
+                                <select name="filiereId" id="filiereId" required onchange="updateMatieres()"
+                                        class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Sélectionner une filière</option>
+                                    <c:forEach var="filiere" items="${filieres}">
+                                        <option value="${filiere.id}" ${not empty emploi && emploi.filiereId == filiere.id ? 'selected' : ''}>${filiere.nom} - ${filiere.cycle} ${filiere.annee}</option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                        </c:if>
+                    </c:when>
+                    <c:otherwise>
+                        <div>
+                            <label for="filiereId" class="block text-sm font-medium text-gray-700 mb-2">
+                                Filière <span class="text-red-500">*</span>
+                            </label>
+                            <select name="filiereId" id="filiereId" required onchange="updateMatieres()"
+                                    class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Sélectionner une filière</option>
+                                <c:forEach var="filiere" items="${filieres}">
+                                    <option value="${filiere.id}" ${not empty emploi && emploi.filiereId == filiere.id ? 'selected' : ''}>${filiere.nom} - ${filiere.cycle} ${filiere.annee}</option>
+                                </c:forEach>
+                            </select>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
 
                 <!-- Année -->
                 <div>
@@ -45,9 +77,9 @@
                     </label>
                     <select name="annee" id="annee" required
                             class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="1">Année 1</option>
-                        <option value="2">Année 2</option>
-                        <option value="3">Année 3</option>
+                        <option value="1" ${not empty emploi && emploi.annee == 1 ? 'selected' : ''}>Année 1</option>
+                        <option value="2" ${not empty emploi && emploi.annee == 2 ? 'selected' : ''}>Année 2</option>
+                        <option value="3" ${not empty emploi && emploi.annee == 3 ? 'selected' : ''}>Année 3</option>
                     </select>
                 </div>
 
@@ -60,18 +92,25 @@
                             class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Sélectionner une matière</option>
                         <c:forEach var="mat" items="${matieres}">
-                            <option value="${mat.id}" data-prof="${mat.professeurId}">${mat.nom}</option>
+                            <option value="${mat.id}" 
+                                    data-prof="${mat.professeurId}" 
+                                    data-prof-nom="${mat.professeurNom}"
+                                    ${not empty emploi && emploi.matiereId == mat.id ? 'selected' : ''}>${mat.nom}</option>
                         </c:forEach>
                     </select>
                 </div>
 
-                <!-- Professeur (auto-rempli) -->
+                <!-- Professeur (affichage du nom au lieu de l'ID) -->
                 <div>
-                    <label for="professeurId" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label for="professeurNom" class="block text-sm font-medium text-gray-700 mb-2">
                         Professeur <span class="text-red-500">*</span>
                     </label>
-                    <input type="number" name="professeurId" id="professeurId" required readonly
-                           class="w-full rounded-md border border-gray-300 px-3 py-2 bg-gray-50 focus:outline-none">
+                    <input type="hidden" name="professeurId" id="professeurId" required 
+                           value="${not empty emploi ? emploi.professeurId : ''}">
+                    <input type="text" id="professeurNom" readonly
+                           class="w-full rounded-md border border-gray-300 px-3 py-2 bg-gray-50 focus:outline-none"
+                           placeholder="Sélectionnez une matière pour voir le professeur"
+                           value="${not empty emploi && not empty emploi.professeurNom ? emploi.professeurNom : ''}">
                 </div>
 
                 <!-- Salle -->
@@ -83,7 +122,7 @@
                             class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Sélectionner une salle</option>
                         <c:forEach var="salle" items="${salles}">
-                            <option value="${salle.id}">${salle.nom} (${salle.type})</option>
+                            <option value="${salle.id}" ${not empty emploi && emploi.salleId == salle.id ? 'selected' : ''}>${salle.nom} (${salle.type})</option>
                         </c:forEach>
                     </select>
                 </div>
@@ -95,12 +134,12 @@
                     </label>
                     <select name="jourSemaine" id="jourSemaine" required
                             class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="LUNDI">Lundi</option>
-                        <option value="MARDI">Mardi</option>
-                        <option value="MERCREDI">Mercredi</option>
-                        <option value="JEUDI">Jeudi</option>
-                        <option value="VENDREDI">Vendredi</option>
-                        <option value="SAMEDI">Samedi</option>
+                        <option value="LUNDI" ${not empty emploi && emploi.jourSemaine == 'LUNDI' ? 'selected' : ''}>Lundi</option>
+                        <option value="MARDI" ${not empty emploi && emploi.jourSemaine == 'MARDI' ? 'selected' : ''}>Mardi</option>
+                        <option value="MERCREDI" ${not empty emploi && emploi.jourSemaine == 'MERCREDI' ? 'selected' : ''}>Mercredi</option>
+                        <option value="JEUDI" ${not empty emploi && emploi.jourSemaine == 'JEUDI' ? 'selected' : ''}>Jeudi</option>
+                        <option value="VENDREDI" ${not empty emploi && emploi.jourSemaine == 'VENDREDI' ? 'selected' : ''}>Vendredi</option>
+                        <option value="SAMEDI" ${not empty emploi && emploi.jourSemaine == 'SAMEDI' ? 'selected' : ''}>Samedi</option>
                     </select>
                 </div>
 
@@ -111,6 +150,7 @@
                             Heure de début <span class="text-red-500">*</span>
                         </label>
                         <input type="time" name="heureDebut" id="heureDebut" required
+                               value="${not empty emploi && not empty emploi.heureDebut ? emploi.heureDebut : ''}"
                                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
@@ -118,6 +158,7 @@
                             Heure de fin <span class="text-red-500">*</span>
                         </label>
                         <input type="time" name="heureFin" id="heureFin" required
+                               value="${not empty emploi && not empty emploi.heureFin ? emploi.heureFin : ''}"
                                class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
@@ -129,9 +170,9 @@
                     </label>
                     <select name="typeSeance" id="typeSeance" required
                             class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="COURS">Cours</option>
-                        <option value="TD">TD</option>
-                        <option value="TP">TP</option>
+                        <option value="COURS" ${not empty emploi && emploi.typeSeance == 'COURS' ? 'selected' : ''}>Cours</option>
+                        <option value="TD" ${not empty emploi && emploi.typeSeance == 'TD' ? 'selected' : ''}>TD</option>
+                        <option value="TP" ${not empty emploi && emploi.typeSeance == 'TP' ? 'selected' : ''}>TP</option>
                     </select>
                 </div>
 
@@ -143,10 +184,15 @@
                     <select name="groupe" id="groupe"
                             class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Tous les groupes</option>
-                        <option value="1">Groupe 1</option>
-                        <option value="2">Groupe 2</option>
+                        <option value="1" ${not empty emploi && emploi.groupe == '1' ? 'selected' : ''}>Groupe 1</option>
+                        <option value="2" ${not empty emploi && emploi.groupe == '2' ? 'selected' : ''}>Groupe 2</option>
                     </select>
                 </div>
+
+                <!-- Hidden field for edit mode -->
+                <c:if test="${not empty emploi}">
+                    <input type="hidden" name="id" value="${emploi.id}">
+                </c:if>
 
                 <!-- Buttons -->
                 <div class="flex gap-4 justify-end">
@@ -156,7 +202,7 @@
                     </a>
                     <button type="submit"
                             class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
-                        Créer la séance
+                        ${not empty emploi ? 'Modifier la séance' : 'Créer la séance'}
                     </button>
                 </div>
             </form>
@@ -167,15 +213,77 @@
 <script>
 function updateProfesseur() {
     const matiereSelect = document.getElementById('matiereId');
-    const professeurInput = document.getElementById('professeurId');
+    const professeurIdInput = document.getElementById('professeurId');
+    const professeurNomInput = document.getElementById('professeurNom');
+    
+    if (!matiereSelect || !professeurIdInput || !professeurNomInput) {
+        return;
+    }
+    
     const selectedOption = matiereSelect.options[matiereSelect.selectedIndex];
-    if (selectedOption.value) {
-        professeurInput.value = selectedOption.getAttribute('data-prof');
+    if (selectedOption && selectedOption.value) {
+        const profId = selectedOption.getAttribute('data-prof') || '';
+        const profNom = selectedOption.getAttribute('data-prof-nom') || '';
+        
+        professeurIdInput.value = profId;
+        professeurNomInput.value = profNom;
+        
+        // Update label to show professor name if available
+        if (profNom) {
+            professeurNomInput.style.color = '#1f2937'; // Dark gray text
+        }
     } else {
-        professeurInput.value = '';
+        professeurIdInput.value = '';
+        professeurNomInput.value = '';
+        professeurNomInput.placeholder = 'Sélectionnez une matière pour voir le professeur';
     }
 }
+
+function updateMatieres() {
+    // This function can be expanded if needed to filter matieres by filiere
+    // For now, all matieres are already filtered server-side
+    // But we should clear professor fields when filiere changes
+    const professeurIdInput = document.getElementById('professeurId');
+    const professeurNomInput = document.getElementById('professeurNom');
+    const matiereSelect = document.getElementById('matiereId');
+    
+    if (matiereSelect) {
+        matiereSelect.selectedIndex = 0; // Reset to first option
+    }
+    
+    if (professeurIdInput) {
+        professeurIdInput.value = '';
+    }
+    if (professeurNomInput) {
+        professeurNomInput.value = '';
+        professeurNomInput.placeholder = 'Sélectionnez une matière pour voir le professeur';
+    }
+    
+    // Trigger update if a matiere is already selected
+    if (matiereSelect && matiereSelect.value) {
+        updateProfesseur();
+    }
+}
+
+// Initialize professor name when page loads (for edit mode or if matiere is pre-selected)
+document.addEventListener('DOMContentLoaded', function() {
+    const matiereSelect = document.getElementById('matiereId');
+    if (matiereSelect && matiereSelect.value) {
+        updateProfesseur();
+    }
+    
+    // Add change listener to filiere select if it exists
+    const filiereSelect = document.getElementById('filiereId');
+    if (filiereSelect) {
+        filiereSelect.addEventListener('change', function() {
+            // When filiere changes, we might need to reload matieres
+            // For now, the server provides all matieres, so we just reset
+            updateMatieres();
+        });
+    }
+});
 </script>
 
 <jsp:include page="../common/footer.jsp"/>
+
 

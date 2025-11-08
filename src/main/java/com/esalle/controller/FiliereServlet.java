@@ -4,6 +4,7 @@ import com.esalle.repository.UserRepository;
 import com.esalle.repository.UserRepositoryImpl;
 import com.esalle.entity.Filiere;
 import com.esalle.entity.Filiere.Cycle;
+import com.esalle.entity.User;
 import com.esalle.repository.FiliereRepository;
 import com.esalle.repository.FiliereRepositoryImpl;
 import com.esalle.service.FiliereService;
@@ -124,6 +125,9 @@ public class FiliereServlet extends HttpServlet {
     private void handleList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        HttpSession session = request.getSession(false);
+        User currentUser = (User) session.getAttribute("user");
+        
         // Récupération des paramètres de filtre
         String cycleParam = request.getParameter("cycle");
         String anneeParam = request.getParameter("annee");
@@ -133,12 +137,46 @@ public class FiliereServlet extends HttpServlet {
         Cycle cycle = (cycleParam != null && !cycleParam.isEmpty()) ? Cycle.valueOf(cycleParam) : null;
         Integer annee = (anneeParam != null && !anneeParam.isEmpty()) ? Integer.parseInt(anneeParam) : null;
 
-        // Récupération des filières filtrées
-        List<Filiere> filieres = filiereService.filterFilieres(cycle, annee, keyword);
+        // Récupération des filières filtrées selon le rôle
+        List<Filiere> filieres;
+        
+        // Si c'est un coordinateur, afficher seulement ses filières assignées
+        if (currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR) {
+            filieres = filiereService.getFilieresByCoordinateur(currentUser.getId());
+            
+            // Appliquer les filtres supplémentaires si nécessaire
+            if (cycle != null || annee != null || (keyword != null && !keyword.trim().isEmpty())) {
+                java.util.stream.Stream<Filiere> stream = filieres.stream();
+                
+                if (cycle != null) {
+                    stream = stream.filter(f -> f.getCycle() == cycle);
+                }
+                if (annee != null) {
+                    stream = stream.filter(f -> f.getAnnee().equals(annee));
+                }
+                if (keyword != null && !keyword.trim().isEmpty()) {
+                    String keywordLower = keyword.toLowerCase();
+                    stream = stream.filter(f -> f.getNom().toLowerCase().contains(keywordLower));
+                }
+                
+                filieres = stream.collect(java.util.stream.Collectors.toList());
+            }
+        } else {
+            // Pour ADMIN et autres rôles, afficher toutes les filières
+            filieres = filiereService.filterFilieres(cycle, annee, keyword);
+        }
 
-        // Statistiques
-        long countPrepa = filiereService.countByCycle(Cycle.PREPARATOIRE);
-        long countIngenieur = filiereService.countByCycle(Cycle.INGENIEUR);
+        // Statistiques (seulement pour ADMIN)
+        long countPrepa = 0;
+        long countIngenieur = 0;
+        if (currentUser != null && currentUser.getRole() == User.UserRole.ADMIN) {
+            countPrepa = filiereService.countByCycle(Cycle.PREPARATOIRE);
+            countIngenieur = filiereService.countByCycle(Cycle.INGENIEUR);
+        } else {
+            // Pour coordinateur, calculer les stats sur ses filières seulement
+            countPrepa = filieres.stream().filter(f -> f.getCycle() == Cycle.PREPARATOIRE).count();
+            countIngenieur = filieres.stream().filter(f -> f.getCycle() == Cycle.INGENIEUR).count();
+        }
 
         // Passage des données à la JSP
         request.setAttribute("filieres", filieres);
@@ -147,6 +185,8 @@ public class FiliereServlet extends HttpServlet {
         request.setAttribute("cycleFilter", cycleParam);
         request.setAttribute("anneeFilter", anneeParam);
         request.setAttribute("keyword", keyword);
+        request.setAttribute("isCoordinateur", currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR);
+        request.setAttribute("isAdmin", currentUser != null && currentUser.getRole() == User.UserRole.ADMIN);
 
         request.getRequestDispatcher("/WEB-INF/views/filiere/list.jsp").forward(request, response);
     }
@@ -244,15 +284,24 @@ public class FiliereServlet extends HttpServlet {
     }
 
     /**
-     * Supprime une filière
+     * Supprime une filière (seulement pour ADMIN)
      */
     private void handleDelete(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        HttpSession session = request.getSession(false);
+        User currentUser = (User) session.getAttribute("user");
+        
+        // Vérifier que seul ADMIN peut supprimer
+        if (currentUser == null || currentUser.getRole() != User.UserRole.ADMIN) {
+            session.setAttribute("error", "Vous n'avez pas la permission de supprimer une filière.");
+            response.sendRedirect(request.getContextPath() + "/filieres/list");
+            return;
+        }
+        
         Long id = Long.parseLong(request.getParameter("id"));
         filiereService.deleteFiliere(id);
         
-        HttpSession session = request.getSession();
         session.setAttribute("success", "Filière supprimée avec succès");
         
         response.sendRedirect(request.getContextPath() + "/filieres/list");

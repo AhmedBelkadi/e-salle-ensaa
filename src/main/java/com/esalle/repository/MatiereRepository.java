@@ -12,6 +12,11 @@ public interface MatiereRepository extends BaseRepository<Matiere, Long> {
     List<Matiere> findByFiliereId(Long filiereId);
     
     /**
+     * Trouver toutes les matières de plusieurs filières
+     */
+    List<Matiere> findByFiliereIds(List<Long> filiereIds);
+    
+    /**
      * Trouver toutes les matières d'un professeur
      */
     List<Matiere> findByProfesseurId(Long professeurId);

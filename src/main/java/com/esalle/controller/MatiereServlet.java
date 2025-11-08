@@ -136,21 +136,84 @@ public class MatiereServlet extends HttpServlet {
     private void handleList(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
+        HttpSession session = request.getSession(false);
+        User currentUser = (User) session.getAttribute("user");
+        
         String filiereIdStr = request.getParameter("filiereId");
         String search = request.getParameter("search");
         
         List<Matiere> matieres;
+        List<Filiere> filieres;
         
-        if (filiereIdStr != null && !filiereIdStr.isEmpty()) {
-            Long filiereId = Long.parseLong(filiereIdStr);
-            matieres = matiereService.getMatieresByFiliere(filiereId);
-        } else if (search != null && !search.trim().isEmpty()) {
-            matieres = matiereService.searchMatieres(search);
+        // Filtrer selon le rôle
+        if (currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR) {
+            // COORDINATEUR: Afficher seulement les matières de ses filières
+            List<Filiere> coordinateurFilieres = filiereService.getFilieresByCoordinateur(currentUser.getId());
+            filieres = coordinateurFilieres;
+            
+            if (coordinateurFilieres == null || coordinateurFilieres.isEmpty()) {
+                matieres = java.util.Collections.emptyList();
+            } else {
+                List<Long> filiereIds = coordinateurFilieres.stream()
+                    .map(Filiere::getId)
+                    .collect(java.util.stream.Collectors.toList());
+                
+                if (filiereIdStr != null && !filiereIdStr.isEmpty()) {
+                    // Filtrer par filière spécifique si demandé
+                    Long filiereId = Long.parseLong(filiereIdStr);
+                    // Vérifier que cette filière appartient au coordinateur
+                    if (filiereIds.contains(filiereId)) {
+                        matieres = matiereService.getMatieresByFiliere(filiereId);
+                    } else {
+                        matieres = java.util.Collections.emptyList();
+                    }
+                } else if (search != null && !search.trim().isEmpty()) {
+                    // Recherche dans ses matières seulement
+                    List<Matiere> allMatieres = matiereService.getMatieresByFilieres(filiereIds);
+                    String searchLower = search.toLowerCase();
+                    matieres = allMatieres.stream()
+                        .filter(m -> m.getNom().toLowerCase().contains(searchLower))
+                        .collect(java.util.stream.Collectors.toList());
+                } else {
+                    // Toutes les matières de ses filières
+                    matieres = matiereService.getMatieresByFilieres(filiereIds);
+                }
+            }
+        } else if (currentUser != null && currentUser.getRole() == User.UserRole.PROFESSEUR) {
+            // PROFESSEUR: Afficher seulement les matières qui lui sont assignées
+            filieres = filiereService.getAllFilieres(); // Pour le filtre, mais les matières seront filtrées
+            
+            if (filiereIdStr != null && !filiereIdStr.isEmpty()) {
+                Long filiereId = Long.parseLong(filiereIdStr);
+                List<Matiere> matieresFiliere = matiereService.getMatieresByFiliere(filiereId);
+                // Filtrer pour ne garder que celles assignées au professeur
+                matieres = matieresFiliere.stream()
+                    .filter(m -> m.getProfesseurId().equals(currentUser.getId()))
+                    .collect(java.util.stream.Collectors.toList());
+            } else if (search != null && !search.trim().isEmpty()) {
+                // Recherche dans ses matières seulement
+                List<Matiere> allMatieres = matiereService.getMatieresByProfesseur(currentUser.getId());
+                String searchLower = search.toLowerCase();
+                matieres = allMatieres.stream()
+                    .filter(m -> m.getNom().toLowerCase().contains(searchLower))
+                    .collect(java.util.stream.Collectors.toList());
+            } else {
+                // Toutes les matières assignées au professeur
+                matieres = matiereService.getMatieresByProfesseur(currentUser.getId());
+            }
         } else {
-            matieres = matiereService.getAllMatieres();
+            // ADMIN et autres: Afficher toutes les matières
+            filieres = filiereService.getAllFilieres();
+            
+            if (filiereIdStr != null && !filiereIdStr.isEmpty()) {
+                Long filiereId = Long.parseLong(filiereIdStr);
+                matieres = matiereService.getMatieresByFiliere(filiereId);
+            } else if (search != null && !search.trim().isEmpty()) {
+                matieres = matiereService.searchMatieres(search);
+            } else {
+                matieres = matiereService.getAllMatieres();
+            }
         }
-        
-        List<Filiere> filieres = filiereService.getAllFilieres();
         
         request.setAttribute("matieres", matieres);
         request.setAttribute("filieres", filieres);
@@ -163,7 +226,18 @@ public class MatiereServlet extends HttpServlet {
     private void handleNew(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
-        List<Filiere> filieres = filiereService.getAllFilieres();
+        HttpSession session = request.getSession(false);
+        User currentUser = (User) session.getAttribute("user");
+        
+        List<Filiere> filieres;
+        
+        // Si c'est un coordinateur, utiliser seulement ses filières
+        if (currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR) {
+            filieres = filiereService.getFilieresByCoordinateur(currentUser.getId());
+        } else {
+            filieres = filiereService.getAllFilieres();
+        }
+        
         List<User> professeurs = userService.findAll().stream()
             .filter(u -> u.getRole() == User.UserRole.PROFESSEUR && u.getStatut() == User.UserStatus.ACTIF)
             .collect(Collectors.toList());
@@ -177,11 +251,33 @@ public class MatiereServlet extends HttpServlet {
     private void handleEdit(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
+        HttpSession session = request.getSession(false);
+        User currentUser = (User) session.getAttribute("user");
+        
         Long id = Long.parseLong(request.getParameter("id"));
         Matiere matiere = matiereService.getMatiereById(id)
                 .orElseThrow(() -> new BusinessException("Matière introuvable."));
         
-        List<Filiere> filieres = filiereService.getAllFilieres();
+        // Vérification de sécurité: si c'est un coordinateur, vérifier qu'il peut modifier cette matière
+        if (currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR) {
+            List<Filiere> coordinateurFilieres = filiereService.getFilieresByCoordinateur(currentUser.getId());
+            boolean canAccess = coordinateurFilieres != null && 
+                coordinateurFilieres.stream().anyMatch(f -> f.getId().equals(matiere.getFiliereId()));
+            
+            if (!canAccess) {
+                session.setAttribute("error", "Vous n'avez pas la permission de modifier cette matière.");
+                response.sendRedirect(request.getContextPath() + "/matieres/list");
+                return;
+            }
+        }
+        
+        List<Filiere> filieres;
+        if (currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR) {
+            filieres = filiereService.getFilieresByCoordinateur(currentUser.getId());
+        } else {
+            filieres = filiereService.getAllFilieres();
+        }
+        
         List<User> professeurs = userService.findAll().stream()
             .filter(u -> u.getRole() == User.UserRole.PROFESSEUR && u.getStatut() == User.UserStatus.ACTIF)
             .collect(Collectors.toList());
@@ -206,6 +302,9 @@ public class MatiereServlet extends HttpServlet {
     private void handleSave(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
+        HttpSession session = request.getSession(false);
+        User currentUser = (User) session.getAttribute("user");
+        
         try {
             Matiere matiere = new Matiere();
             
@@ -215,8 +314,23 @@ public class MatiereServlet extends HttpServlet {
                         .orElse(new Matiere());
             }
             
+            Long filiereId = Long.parseLong(request.getParameter("filiereId"));
+            
+            // Vérification de sécurité: si c'est un coordinateur, vérifier qu'il peut créer/modifier pour cette filière
+            if (currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR) {
+                List<Filiere> coordinateurFilieres = filiereService.getFilieresByCoordinateur(currentUser.getId());
+                boolean canAccess = coordinateurFilieres != null && 
+                    coordinateurFilieres.stream().anyMatch(f -> f.getId().equals(filiereId));
+                
+                if (!canAccess) {
+                    session.setAttribute("error", "Vous n'avez pas la permission de créer/modifier une matière pour cette filière.");
+                    response.sendRedirect(request.getContextPath() + "/matieres/list");
+                    return;
+                }
+            }
+            
             matiere.setNom(request.getParameter("nom"));
-            matiere.setFiliereId(Long.parseLong(request.getParameter("filiereId")));
+            matiere.setFiliereId(filiereId);
             matiere.setProfesseurId(Long.parseLong(request.getParameter("professeurId")));
             matiere.setHeuresCours(Integer.parseInt(request.getParameter("heuresCours")));
             matiere.setHeuresTD(Integer.parseInt(request.getParameter("heuresTD")));
@@ -225,6 +339,7 @@ public class MatiereServlet extends HttpServlet {
             
             matiereService.saveMatiere(matiere);
             
+            session.setAttribute("success", "Matière sauvegardée avec succès");
             response.sendRedirect(request.getContextPath() + "/matieres/list?success=saved");
         } catch (BusinessException e) {
             request.setAttribute("error", e.getMessage());
@@ -235,9 +350,29 @@ public class MatiereServlet extends HttpServlet {
     private void handleDelete(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
+        HttpSession session = request.getSession(false);
+        User currentUser = (User) session.getAttribute("user");
+        
         Long id = Long.parseLong(request.getParameter("id"));
+        Matiere matiere = matiereService.getMatiereById(id)
+                .orElseThrow(() -> new BusinessException("Matière introuvable."));
+        
+        // Vérification de sécurité: si c'est un coordinateur, vérifier qu'il peut supprimer cette matière
+        if (currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR) {
+            List<Filiere> coordinateurFilieres = filiereService.getFilieresByCoordinateur(currentUser.getId());
+            boolean canAccess = coordinateurFilieres != null && 
+                coordinateurFilieres.stream().anyMatch(f -> f.getId().equals(matiere.getFiliereId()));
+            
+            if (!canAccess) {
+                session.setAttribute("error", "Vous n'avez pas la permission de supprimer cette matière.");
+                response.sendRedirect(request.getContextPath() + "/matieres/list");
+                return;
+            }
+        }
+        
         matiereService.deleteMatiere(id);
         
+        session.setAttribute("success", "Matière supprimée avec succès");
         response.sendRedirect(request.getContextPath() + "/matieres/list?success=deleted");
     }
 }
