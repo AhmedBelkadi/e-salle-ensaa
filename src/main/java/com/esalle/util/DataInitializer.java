@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 public class DataInitializer implements ServletContextListener {
 
     private static final Logger LOGGER = Logger.getLogger(DataInitializer.class.getName());
-    private static final String DEFAULT_PASSWORD = "Test@2024"; // Même mot de passe pour tous les comptes de test
+    private static final String DEFAULT_PASSWORD = "Test@2024";
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -37,7 +37,6 @@ public class DataInitializer implements ServletContextListener {
 
         try {
             LOGGER.info("🔧 Tentative d'obtention de SessionFactory...");
-            // Try to get session factory - may fail if Hibernate not ready yet
             sessionFactory = HibernateUtil.getSessionFactory();
             LOGGER.info("✅ SessionFactory obtenue avec succès");
             
@@ -54,7 +53,7 @@ public class DataInitializer implements ServletContextListener {
             transaction = session.beginTransaction();
             LOGGER.info("✅ Transaction démarrée");
 
-            // Vérifier si des données existent déjà
+            // FIXED: Use entity name only, not full package path
             Long userCount = (Long) session.createQuery("SELECT COUNT(u) FROM User u").uniqueResult();
             
             if (userCount > 0) {
@@ -65,7 +64,7 @@ public class DataInitializer implements ServletContextListener {
 
             LOGGER.info("📝 Création des utilisateurs de test...");
 
-            // 1️⃣ ADMIN - admin@ensaa.ma
+            // 1️⃣ ADMIN
             User admin = createUser(
                 "admin@ensaa.ma",
                 "Admin",
@@ -77,7 +76,7 @@ public class DataInitializer implements ServletContextListener {
             session.persist(admin);
             LOGGER.info("✅ Admin créé: admin@ensaa.ma / Test@2024");
 
-            // 2️⃣ COORDINATEUR - coordinateur@ensaa.ma
+            // 2️⃣ COORDINATEUR
             User coordinateur = createUser(
                 "coordinateur@ensaa.ma",
                 "Hassan",
@@ -89,7 +88,7 @@ public class DataInitializer implements ServletContextListener {
             session.persist(coordinateur);
             LOGGER.info("✅ Coordinateur créé: coordinateur@ensaa.ma / Test@2024");
 
-            // 3️⃣ PROFESSEUR - professeur@ensaa.ma
+            // 3️⃣ PROFESSEUR
             User professeur = createUser(
                 "professeur@ensaa.ma",
                 "Fatima",
@@ -101,7 +100,7 @@ public class DataInitializer implements ServletContextListener {
             session.persist(professeur);
             LOGGER.info("✅ Professeur créé: professeur@ensaa.ma / Test@2024");
 
-            // 4️⃣ MEMBRE_CLUB - club@ensaa.ma
+            // 4️⃣ MEMBRE_CLUB
             User membreClub = createUser(
                 "club@ensaa.ma",
                 "Ahmed",
@@ -113,7 +112,7 @@ public class DataInitializer implements ServletContextListener {
             session.persist(membreClub);
             LOGGER.info("✅ Membre Club créé: club@ensaa.ma / Test@2024");
 
-            // 📚 Créer des salles de démonstration
+            // 📚 Créer des salles
             LOGGER.info("📝 Création des salles de démonstration...");
             
             Salle amphiA = createSalle("Amphithéâtre A", TypeSalle.COURS, 200, 
@@ -134,10 +133,9 @@ public class DataInitializer implements ServletContextListener {
 
             LOGGER.info("✅ 4 salles créées");
 
-            // 🎓 Créer des filières de démonstration
+            // 🎓 Créer des filières
             LOGGER.info("📝 Création des filières de démonstration...");
             
-            // Cycle Préparatoire (2 filières auto)
             Filiere prepa1 = createFiliere("MPSI", Cycle.PREPARATOIRE, 1, 45, 
                 "Mathématiques, Physique et Sciences de l'Ingénieur - 1ère année");
             session.persist(prepa1);
@@ -146,7 +144,6 @@ public class DataInitializer implements ServletContextListener {
                 "Mathématiques, Physique et Sciences de l'Ingénieur - 2ème année");
             session.persist(prepa2);
 
-            // Cycle Ingénieur (3 filières auto)
             Filiere ing1 = createFiliere("Génie Informatique", Cycle.INGENIEUR, 1, 60, 
                 "Formation en développement logiciel et systèmes - DLA1");
             session.persist(ing1);
@@ -174,22 +171,9 @@ public class DataInitializer implements ServletContextListener {
             LOGGER.info("✅ ========================================");
 
         } catch (Throwable t) {
-            // Catch all errors including Error and ExceptionInInitializerError
-            LOGGER.severe("❌ ERREUR CRITIQUE lors de l'initialisation des données!");
-            LOGGER.severe("Type: " + t.getClass().getName());
-            LOGGER.severe("Message: " + (t.getMessage() != null ? t.getMessage() : "N/A"));
+            LOGGER.severe("❌ ERREUR lors de l'initialisation: " + t.getMessage());
+            t.printStackTrace();
             
-            if (t.getCause() != null) {
-                LOGGER.severe("Cause: " + t.getCause().getClass().getName() + " - " + t.getCause().getMessage());
-            }
-            
-            // Print full stack trace
-            java.io.StringWriter sw = new java.io.StringWriter();
-            java.io.PrintWriter pw = new java.io.PrintWriter(sw);
-            t.printStackTrace(pw);
-            LOGGER.severe("Stack trace:\n" + sw.toString());
-            
-            // Clean up transaction if active
             if (transaction != null && transaction.isActive()) {
                 try {
                     transaction.rollback();
@@ -199,7 +183,6 @@ public class DataInitializer implements ServletContextListener {
                 }
             }
             
-            // Don't rethrow - allow application to start even if data initialization fails
             LOGGER.warning("⚠️ L'application continuera à démarrer sans les données initiales.");
         } finally {
             if (session != null && session.isOpen()) {
@@ -207,7 +190,7 @@ public class DataInitializer implements ServletContextListener {
                     session.close();
                     LOGGER.info("✅ Session fermée");
                 } catch (Exception closeEx) {
-                    LOGGER.warning("Erreur lors de la fermeture de la session: " + closeEx.getMessage());
+                    LOGGER.warning("Erreur lors de la fermeture: " + closeEx.getMessage());
                 }
             }
             LOGGER.info("🏁 Fin de l'initialisation des données");
@@ -221,13 +204,10 @@ public class DataInitializer implements ServletContextListener {
             HibernateUtil.closeSessionFactory();
             LOGGER.info("✅ SessionFactory fermé avec succès");
         } catch (Exception e) {
-            LOGGER.warning("⚠️ Erreur lors de la fermeture de SessionFactory: " + e.getMessage());
+            LOGGER.warning("⚠️ Erreur lors de la fermeture: " + e.getMessage());
         }
     }
 
-    /**
-     * Crée un utilisateur avec mot de passe hashé
-     */
     private User createUser(String email, String nom, String prenom, String telephone, 
                            UserRole role, UserStatus status) {
         User user = new User();
@@ -238,13 +218,9 @@ public class DataInitializer implements ServletContextListener {
         user.setTelephone(telephone);
         user.setRole(role);
         user.setStatut(status);
-        // Note: createdAt/updatedAt sont gérés automatiquement par @PrePersist/@PreUpdate
         return user;
     }
 
-    /**
-     * Crée une salle
-     */
     private Salle createSalle(String nom, TypeSalle type, int capacite, String equipements, boolean disponible) {
         Salle salle = new Salle();
         salle.setNom(nom);
@@ -252,13 +228,9 @@ public class DataInitializer implements ServletContextListener {
         salle.setCapacite(capacite);
         salle.setEquipements(equipements);
         salle.setDisponible(disponible);
-        // Note: createdAt/updatedAt sont gérés automatiquement par @PrePersist/@PreUpdate
         return salle;
     }
 
-    /**
-     * Crée une filière
-     */
     private Filiere createFiliere(String nom, Cycle cycle, int annee, int effectif, String description) {
         Filiere filiere = new Filiere();
         filiere.setNom(nom);
@@ -266,8 +238,6 @@ public class DataInitializer implements ServletContextListener {
         filiere.setAnnee(annee);
         filiere.setEffectif(effectif);
         filiere.setDescription(description);
-        // Note: createdAt/updatedAt sont gérés automatiquement par @PrePersist/@PreUpdate
         return filiere;
     }
 }
-

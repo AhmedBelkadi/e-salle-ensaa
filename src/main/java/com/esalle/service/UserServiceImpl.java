@@ -4,8 +4,6 @@ import com.esalle.entity.User;
 import com.esalle.repository.UserRepository;
 import com.esalle.repository.UserRepositoryImpl;
 import com.esalle.exception.BusinessException;
-import com.esalle.service.NotificationService;
-import com.esalle.service.NotificationServiceImpl;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.LocalDateTime;

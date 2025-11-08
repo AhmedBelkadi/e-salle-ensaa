@@ -2,51 +2,55 @@
 <!DOCTYPE hibernate-configuration PUBLIC
         "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
-
 <hibernate-configuration>
     <session-factory>
         <!-- Database connection settings -->
-        <!-- For Local: use localhost:5432 -->
-        <!-- For Docker: use postgres:5432 -->
         <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
-        <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/esalle_ensaa</property>
+        <!-- Use esalle_ensaa database as per docker-compose -->
+        <property name="hibernate.connection.url">jdbc:postgresql://postgres:5432/esalle_ensaa</property>
         <property name="hibernate.connection.username">postgres</property>
-        <property name="hibernate.connection.password">Bac14.83</property>
-        
-        <!-- Database dialect -->
+        <property name="hibernate.connection.password">password</property>
+
+        <!-- JDBC connection pool settings -->
+        <property name="hibernate.connection.pool_size">10</property>
+
+        <!-- SQL dialect -->
         <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
-        
+
         <!-- Echo all executed SQL to stdout -->
-        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.show_sql">false</property>
         <property name="hibernate.format_sql">true</property>
-        
+        <property name="hibernate.use_sql_comments">false</property>
+
         <!-- Drop and re-create the database schema on startup -->
         <property name="hibernate.hbm2ddl.auto">update</property>
-        
-        <!-- Current session context -->
+
+        <!-- Current Session Context -->
         <property name="hibernate.current_session_context_class">thread</property>
+
+        <!-- Disable the second-level cache -->
+        <property name="hibernate.cache.use_second_level_cache">false</property>
+        <property name="hibernate.cache.use_query_cache">false</property>
+
+        <!-- ========================================== -->
+        <!-- ENTITY CLASS MAPPINGS - CRITICAL!         -->
+        <!-- ========================================== -->
         
-        <!-- Connection pool settings -->
-        <property name="hibernate.c3p0.min_size">5</property>
-        <property name="hibernate.c3p0.max_size">20</property>
-        <property name="hibernate.c3p0.acquire_increment">1</property>
-        <property name="hibernate.c3p0.timeout">300</property>
-        <property name="hibernate.c3p0.max_statements">50</property>
-        
-        <!-- Entity mappings -->
-        <!-- Module Auth & Users (Dev1) -->
+        <!-- User and Authentication -->
         <mapping class="com.esalle.entity.User"/>
-        <mapping class="com.esalle.entity.Filiere"/>
-        <mapping class="com.esalle.entity.Reclamation"/>
-        <mapping class="com.esalle.entity.Salle"/>
         
-        <!-- Module Dev2 -->
+        <!-- Room Management -->
+        <mapping class="com.esalle.entity.Salle"/>
+        <mapping class="com.esalle.entity.Reservation"/>
+        <mapping class="com.esalle.entity.Reclamation"/>
+        
+        <!-- Academic Management -->
+        <mapping class="com.esalle.entity.Filiere"/>
         <mapping class="com.esalle.entity.Matiere"/>
         <mapping class="com.esalle.entity.EmploiDuTemps"/>
-        <mapping class="com.esalle.entity.Reservation"/>
         
-        <!-- Audit & Workflow -->
+        <!-- Audit -->
         <mapping class="com.esalle.entity.AuditLog"/>
-        
+
     </session-factory>
 </hibernate-configuration>

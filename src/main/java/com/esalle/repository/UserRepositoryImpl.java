@@ -18,7 +18,7 @@ public class UserRepositoryImpl extends BaseRepositoryImpl<User, Long> implement
         Session session = sessionFactory.openSession();
         try {
             Query<User> query = session.createQuery(
-                "FROM User u WHERE u.email = :email", User.class);
+                "FROM " + com.esalle.entity.User.class.getName() + " u WHERE u.email = :email", User.class);
             query.setParameter("email", email);
             return query.uniqueResultOptional();
         } finally {
@@ -31,7 +31,7 @@ public class UserRepositoryImpl extends BaseRepositoryImpl<User, Long> implement
         Session session = sessionFactory.openSession();
         try {
             Query<User> query = session.createQuery(
-                "FROM User u WHERE u.statut = :statut ORDER BY u.dateInscription DESC", User.class);
+                "FROM " + com.esalle.entity.User.class.getName() + " u WHERE u.statut = :statut ORDER BY u.dateInscription DESC", User.class);
             query.setParameter("statut", statut);
             return query.list();
         } finally {
@@ -44,7 +44,7 @@ public class UserRepositoryImpl extends BaseRepositoryImpl<User, Long> implement
         Session session = sessionFactory.openSession();
         try {
             Query<User> query = session.createQuery(
-                "FROM User u WHERE u.role = :role ORDER BY u.nom, u.prenom", User.class);
+                "FROM " + com.esalle.entity.User.class.getName() + " u WHERE u.role = :role ORDER BY u.nom, u.prenom", User.class);
             query.setParameter("role", role);
             return query.list();
         } finally {

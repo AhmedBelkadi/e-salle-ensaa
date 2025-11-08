@@ -18,21 +18,7 @@ public class AuthServlet extends HttpServlet {
     
     @Override
     public void init() throws ServletException {
-        try {
-            userService = new UserServiceImpl();
-            // Créer admin au démarrage de l'application (si Hibernate est disponible)
-            try {
-                User admin = userService.createAdmin();
-                log("Admin account created/verified: " + admin.getEmail());
-            } catch (Exception e) {
-                log("Warning: Could not create admin account during init: " + e.getMessage());
-                log("Admin will be created on first login attempt if needed");
-            }
-        } catch (Exception e) {
-            log("Warning: Could not initialeize UserService during servlet init: " + e.getMessage(), e);
-            // Don't fail servlet initialization - we'll create the service lazily on first request
-            userService = null;
-        }
+    userService = new UserServiceImpl();    
     }
     
     @Override
