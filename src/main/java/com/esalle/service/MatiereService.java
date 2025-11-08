@@ -10,6 +10,7 @@ public interface MatiereService {
     List<Matiere> getAllMatieres();
     void deleteMatiere(Long id);
     List<Matiere> getMatieresByFiliere(Long filiereId);
+    List<Matiere> getMatieresByFilieres(List<Long> filiereIds);
     List<Matiere> getMatieresByProfesseur(Long professeurId);
     List<Matiere> searchMatieres(String keyword);
 }

@@ -394,9 +394,29 @@ public class EmploiDuTempsServlet extends HttpServlet {
     private void handleNew(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
-        List<Filiere> filieres = filiereService.getAllFilieres();
+        HttpSession session = request.getSession(false);
+        User currentUser = (User) session.getAttribute("user");
+        
+        List<Filiere> filieres;
         List<Salle> salles = salleService.getAllSalles();
-        List<Matiere> matieres = matiereService.getAllMatieres();
+        List<Matiere> matieres;
+        
+        // Si c'est un coordinateur, utiliser seulement ses filières
+        if (currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR) {
+            filieres = filiereService.getFilieresByCoordinateur(currentUser.getId());
+            // Charger toutes les matières de ses filières
+            if (filieres != null && !filieres.isEmpty()) {
+                List<Long> filiereIds = filieres.stream()
+                    .map(Filiere::getId)
+                    .collect(java.util.stream.Collectors.toList());
+                matieres = matiereService.getMatieresByFilieres(filiereIds);
+            } else {
+                matieres = java.util.Collections.emptyList();
+            }
+        } else {
+            filieres = filiereService.getAllFilieres();
+            matieres = matiereService.getAllMatieres();
+        }
         
         String idStr = request.getParameter("id");
         if (idStr != null && !idStr.isEmpty()) {
@@ -410,14 +430,33 @@ public class EmploiDuTempsServlet extends HttpServlet {
             }
         }
         
+        // Charger les professeurs pour afficher les noms
+        List<User> professeurs = new java.util.ArrayList<>();
+        if (!matieres.isEmpty()) {
+            java.util.Set<Long> professeurIds = matieres.stream()
+                .map(Matiere::getProfesseurId)
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toSet());
+            
+            com.esalle.service.UserService userService = new com.esalle.service.UserServiceImpl();
+            for (Long profId : professeurIds) {
+                userService.findById(profId).ifPresent(professeurs::add);
+            }
+        }
+        
         request.setAttribute("filieres", filieres);
         request.setAttribute("salles", salles);
         request.setAttribute("matieres", matieres);
+        request.setAttribute("professeurs", professeurs);
+        request.setAttribute("isCoordinateur", currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR);
         request.getRequestDispatcher("/WEB-INF/views/emploi/form.jsp").forward(request, response);
     }
 
     private void handleSave(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+        
+        HttpSession session = request.getSession(false);
+        User currentUser = (User) session.getAttribute("user");
         
         try {
             EmploiDuTemps emploi = new EmploiDuTemps();
@@ -427,7 +466,22 @@ public class EmploiDuTempsServlet extends HttpServlet {
                 emploi.setId(Long.parseLong(idStr));
             }
             
-            emploi.setFiliereId(Long.parseLong(request.getParameter("filiereId")));
+            Long filiereId = Long.parseLong(request.getParameter("filiereId"));
+            
+            // Vérification de sécurité: si c'est un coordinateur, vérifier qu'il peut créer pour cette filière
+            if (currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR) {
+                List<Filiere> coordinateurFilieres = filiereService.getFilieresByCoordinateur(currentUser.getId());
+                boolean canAccess = coordinateurFilieres != null && 
+                    coordinateurFilieres.stream().anyMatch(f -> f.getId().equals(filiereId));
+                
+                if (!canAccess) {
+                    session.setAttribute("error", "Vous n'avez pas la permission de créer un emploi du temps pour cette filière.");
+                    response.sendRedirect(request.getContextPath() + "/emploi/list");
+                    return;
+                }
+            }
+            
+            emploi.setFiliereId(filiereId);
             emploi.setAnnee(Integer.parseInt(request.getParameter("annee")));
             emploi.setMatiereId(Long.parseLong(request.getParameter("matiereId")));
             emploi.setProfesseurId(Long.parseLong(request.getParameter("professeurId")));
@@ -444,6 +498,7 @@ public class EmploiDuTempsServlet extends HttpServlet {
             
             emploiService.saveEmploiDuTemps(emploi);
             
+            session.setAttribute("success", "Séance créée avec succès");
             response.sendRedirect(request.getContextPath() + "/emploi/list?success=saved");
         } catch (BusinessException e) {
             request.setAttribute("error", e.getMessage());

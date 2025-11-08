@@ -92,6 +92,14 @@ public class MatiereServiceImpl implements MatiereService {
     }
 
     @Override
+    public List<Matiere> getMatieresByFilieres(List<Long> filiereIds) {
+        if (filiereIds == null || filiereIds.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        return matiereRepository.findByFiliereIds(filiereIds);
+    }
+
+    @Override
     public List<Matiere> getMatieresByProfesseur(Long professeurId) {
         return matiereRepository.findByProfesseurId(professeurId);
     }
