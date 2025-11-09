@@ -91,8 +91,8 @@
             </div>
         </c:if>
 
-        <!-- Filters (only for admin/coordinateur) -->
-        <c:if test="${canEdit || isAdmin}">
+        <!-- Filters (only for admin/coordinateur, NOT for professeur) -->
+        <c:if test="${(canEdit || isAdmin) && !isProfessor}">
             <div class="bg-white flex flex-col gap-6 rounded-xl border border-gray-200 py-6 shadow-sm">
                 <div class="px-6 pt-0">
                     <form method="get" action="${pageContext.request.contextPath}/emploi/list" class="flex gap-4 flex-col md:flex-row">
@@ -144,22 +144,13 @@
                 </div>
                 <div class="p-6">
                     <form method="POST" action="${pageContext.request.contextPath}/emploi/save" class="space-y-4">
-                        <input type="hidden" name="filiereId" id="formFiliereId" required>
-                        <input type="hidden" name="annee" id="formAnnee" value="1">
+                        <input type="hidden" name="filiereId" id="formFiliereId" required 
+                               value="${isCoordinateur && not empty filieres ? filieres[0].id : ''}">
+                        <input type="hidden" name="annee" id="formAnnee" 
+                               value="${isCoordinateur && not empty filieres ? filieres[0].annee : '1'}">
                         <input type="hidden" name="jourSemaine" id="formJourSemaine" required>
                         <input type="hidden" name="heureDebut" id="formHeureDebut" required>
                         <input type="hidden" name="heureFin" id="formHeureFin" required>
-                        
-                        <div>
-                            <label class="text-gray-700 font-medium block mb-2">Filière <span class="text-red-500">*</span></label>
-                            <select name="filiereId" id="branchSelect" required
-                                    class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                <option value="">Sélectionner une filière</option>
-                                <c:forEach var="filiere" items="${filieres}">
-                                    <option value="${filiere.id}">${filiere.nom} - ${filiere.cycle} ${filiere.annee}</option>
-                                </c:forEach>
-                            </select>
-                        </div>
                         
                         <div id="dayTimeSelectors" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -195,15 +186,20 @@
                                     class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                                 <option value="">Sélectionner une matière</option>
                                 <c:forEach var="matiere" items="${matieres}">
-                                    <option value="${matiere.id}" data-filiere="${matiere.filiereId}" data-prof="${matiere.professeurId}">${matiere.nom}</option>
+                                    <option value="${matiere.id}" 
+                                            data-filiere="${matiere.filiereId}" 
+                                            data-prof="${matiere.professeurId}"
+                                            data-prof-nom="${matiere.professeurNom}">${matiere.nom}</option>
                                 </c:forEach>
                             </select>
                         </div>
                         
                         <div>
                             <label class="text-gray-700 font-medium block mb-2">Professeur <span class="text-red-500">*</span></label>
-                            <input type="number" name="professeurId" id="professorId" required readonly
-                                   class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900">
+                            <input type="hidden" name="professeurId" id="professorId" required>
+                            <input type="text" id="professorNom" readonly
+                                   class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900"
+                                   placeholder="Sélectionnez une matière pour voir le professeur">
                         </div>
                         
                         <div>
@@ -782,6 +778,11 @@
 
 <c:if test="${canEdit}">
 <script>
+// Variables JSP pour JavaScript
+var isCoordinateur = <c:choose><c:when test="${isCoordinateur}">true</c:when><c:otherwise>false</c:otherwise></c:choose>;
+var coordinateurFiliereId = <c:choose><c:when test="${isCoordinateur && not empty filieres}">'${filieres[0].id}'</c:when><c:otherwise>null</c:otherwise></c:choose>;
+var coordinateurAnnee = <c:choose><c:when test="${isCoordinateur && not empty filieres}">'${filieres[0].annee}'</c:when><c:otherwise>null</c:otherwise></c:choose>;
+
 document.addEventListener('DOMContentLoaded', function() {
     const addScheduleBtn = document.getElementById('addScheduleBtn');
     const scheduleForm = document.getElementById('scheduleForm');
@@ -795,7 +796,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const formHeureDebut = document.getElementById('formHeureDebut');
     const formHeureFin = document.getElementById('formHeureFin');
     const formFiliereId = document.getElementById('formFiliereId');
-    const branchSelect = document.getElementById('branchSelect');
+    const formAnnee = document.getElementById('formAnnee');
     const subjectSelect = document.getElementById('subjectSelect');
     const typeSeanceSelect = document.getElementById('typeSeanceSelect');
     const salleSelect = document.getElementById('salleSelect');
@@ -884,18 +885,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Update filiere when branch is selected
-    if (branchSelect) {
-        branchSelect.addEventListener('change', function() {
-            if (formFiliereId) formFiliereId.value = this.value;
-            // Filter matières by filière
-            if (subjectSelect) {
-                const selectedFiliere = this.value;
-                Array.from(subjectSelect.options).forEach(option => {
-                    if (option.value === '') return;
-                    const optionFiliere = option.getAttribute('data-filiere');
-                    option.style.display = (!selectedFiliere || optionFiliere === selectedFiliere) ? 'block' : 'none';
-                });
+    // Pour les coordinateurs, initialiser la filière et l'année automatiquement
+    if (isCoordinateur && coordinateurFiliereId && formFiliereId) {
+        formFiliereId.value = coordinateurFiliereId;
+    }
+    if (isCoordinateur && coordinateurAnnee && formAnnee) {
+        formAnnee.value = coordinateurAnnee;
+    }
+    
+    // Mettre à jour la filière quand une matière est sélectionnée (pour admin uniquement)
+    if (!isCoordinateur && subjectSelect) {
+        subjectSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption && selectedOption.value && formFiliereId) {
+                const matiereFiliereId = selectedOption.getAttribute('data-filiere');
+                if (matiereFiliereId) {
+                    formFiliereId.value = matiereFiliereId;
+                }
             }
         });
     }
@@ -920,10 +926,19 @@ document.addEventListener('DOMContentLoaded', function() {
         if (subjectSelect) subjectSelect.value = '';
         const professorId = document.getElementById('professorId');
         if (professorId) professorId.value = '';
+        const professorNom = document.getElementById('professorNom');
+        if (professorNom) professorNom.value = '';
         if (salleSelect) salleSelect.value = '';
         if (typeSeanceSelect) typeSeanceSelect.value = 'COURS';
-        if (branchSelect) branchSelect.value = '';
-        if (formFiliereId) formFiliereId.value = '';
+        // Pour coordinateur, réinitialiser avec la première filière
+        if (isCoordinateur && coordinateurFiliereId && formFiliereId) {
+            formFiliereId.value = coordinateurFiliereId;
+        } else if (!isCoordinateur && formFiliereId) {
+            formFiliereId.value = '';
+        }
+        if (isCoordinateur && coordinateurAnnee && formAnnee) {
+            formAnnee.value = coordinateurAnnee;
+        }
         if (formJourSemaine) formJourSemaine.value = '';
         if (formHeureDebut) formHeureDebut.value = '';
         if (formHeureFin) formHeureFin.value = '';
@@ -939,13 +954,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function updateProfesseur() {
     const matiereSelect = document.getElementById('subjectSelect');
-    const professeurInput = document.getElementById('professorId');
-    if (matiereSelect && professeurInput) {
+    const professeurIdInput = document.getElementById('professorId');
+    const professeurNomInput = document.getElementById('professorNom');
+    
+    if (matiereSelect && professeurIdInput && professeurNomInput) {
         const selectedOption = matiereSelect.options[matiereSelect.selectedIndex];
         if (selectedOption && selectedOption.value) {
-            professeurInput.value = selectedOption.getAttribute('data-prof') || '';
+            const professeurId = selectedOption.getAttribute('data-prof') || '';
+            const professeurNom = selectedOption.getAttribute('data-prof-nom') || '';
+            professeurIdInput.value = professeurId;
+            professeurNomInput.value = professeurNom;
         } else {
-            professeurInput.value = '';
+            professeurIdInput.value = '';
+            professeurNomInput.value = '';
         }
     }
 }
