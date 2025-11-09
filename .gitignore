@@ -36,6 +36,8 @@ Thumbs.db
 uploads/
 temp/
 
+diagrams/
+
 # Report (LaTeX - not for production)
 report/
 
@@ -75,3 +77,4 @@ application-local.properties
 *.odt
 *.odp
 *.ods
+*.tex
