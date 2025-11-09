@@ -81,3 +81,7 @@ application-local.properties
 # hibernate
 src/main/resources/hibernate.cfg.xml
 *.tex
+
+# Node.js
+node_modules/
+package-lock.json
