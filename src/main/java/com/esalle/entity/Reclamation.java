@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
  * 
  * Permet aux utilisateurs de signaler des problèmes concernant les salles.
  * Workflow: EN_ATTENTE → TRAITEE
- * Notifications envoyées à l'admin lors de création et au user lors du traitement.
  */
 @Entity
 @Table(name = "reclamations")

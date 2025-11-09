@@ -13,8 +13,6 @@ import com.esalle.repository.SalleRepository;
 import com.esalle.repository.SalleRepositoryImpl;
 import com.esalle.exception.BusinessException;
 import com.esalle.exception.NotFoundException;
-import com.esalle.service.NotificationService;
-import com.esalle.service.NotificationServiceImpl;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,23 +25,19 @@ public class ReclamationServiceImpl implements ReclamationService {
     private final ReclamationRepository reclamationRepository;
     private final UserRepository userRepository;
     private final SalleRepository salleRepository;
-    private final NotificationService notificationService;
 
     public ReclamationServiceImpl() {
         this.reclamationRepository = new ReclamationRepositoryImpl();
         this.userRepository = new UserRepositoryImpl();
         this.salleRepository = new SalleRepositoryImpl();
-        this.notificationService = new NotificationServiceImpl();
     }
 
     public ReclamationServiceImpl(ReclamationRepository reclamationRepository,
                                   UserRepository userRepository,
-                                  SalleRepository salleRepository,
-                                  NotificationService notificationService) {
+                                  SalleRepository salleRepository) {
         this.reclamationRepository = reclamationRepository;
         this.userRepository = userRepository;
         this.salleRepository = salleRepository;
-        this.notificationService = notificationService;
     }
 
     @Override
@@ -90,9 +84,6 @@ public class ReclamationServiceImpl implements ReclamationService {
 
         Reclamation saved = reclamationRepository.save(reclamation);
 
-        // Notification à l'admin (email + WhatsApp)
-        notifyAdminNewReclamation(saved, user, salle);
-
         return saved;
     }
 
@@ -132,9 +123,6 @@ public class ReclamationServiceImpl implements ReclamationService {
         reclamation.setCommentaireTraitement(commentaire);
 
         Reclamation updated = reclamationRepository.save(reclamation);
-
-        // Notification à l'utilisateur (email + WhatsApp)
-        notifyUserReclamationTraitee(updated, admin);
 
         return updated;
     }
@@ -195,73 +183,6 @@ public class ReclamationServiceImpl implements ReclamationService {
         return reclamationRepository.countUrgentesEnAttente();
     }
 
-    // Private notification methods
-
-    /**
-     * Notifie l'admin de la création d'une nouvelle réclamation
-     */
-    private void notifyAdminNewReclamation(Reclamation reclamation, User user, Salle salle) {
-        String urgenceText = reclamation.getUrgenceLibelle();
-        String subject = String.format("🔔 Nouvelle réclamation %s - Salle %s", 
-            urgenceText.toUpperCase(), salle.getNom());
-        
-        String message = String.format(
-            "Une nouvelle réclamation a été créée:\n\n" +
-            "👤 Utilisateur: %s\n" +
-            "🏫 Salle: %s\n" +
-            "⚠️ Urgence: %s\n" +
-            "📝 Description: %s\n\n" +
-            "Veuillez la traiter dès que possible.",
-            reclamation.getUserNom(),
-            salle.getNom(),
-            urgenceText,
-            reclamation.getDescription()
-        );
-
-        // Email + WhatsApp à l'admin
-        String adminEmail = "admin@ensaa.ma";
-        String adminPhone = "+212600000000"; // À configurer
-
-        notificationService.sendEmail(adminEmail, subject, message);
-        notificationService.sendWhatsApp(adminPhone, message);
-    }
-
-    /**
-     * Notifie l'utilisateur que sa réclamation a été traitée
-     */
-    private void notifyUserReclamationTraitee(Reclamation reclamation, User admin) {
-        // Récupérer les infos de l'utilisateur
-        User user = userRepository.findById(reclamation.getUserId())
-            .orElse(null);
-
-        if (user == null) {
-            return; // Pas de notification si user introuvable
-        }
-
-        String subject = String.format("✅ Réclamation traitée - Salle %s", reclamation.getSalleNom());
-        
-        String message = String.format(
-            "Bonjour %s,\n\n" +
-            "Votre réclamation concernant la salle %s a été traitée par %s.\n\n" +
-            "📝 Votre réclamation: %s\n\n" +
-            "💬 Commentaire: %s\n\n" +
-            "Merci de votre signalement.",
-            user.getPrenom(),
-            reclamation.getSalleNom(),
-            reclamation.getTraiteParNom(),
-            reclamation.getDescription(),
-            reclamation.getCommentaireTraitement() != null ? 
-                reclamation.getCommentaireTraitement() : "Aucun commentaire"
-        );
-
-        // Email + WhatsApp à l'utilisateur
-        if (user.getEmail() != null) {
-            notificationService.sendEmail(user.getEmail(), subject, message);
-        }
-        if (user.getTelephone() != null) {
-            notificationService.sendWhatsApp(user.getTelephone(), message);
-        }
-    }
 
     @Override
     public List<Salle> getAllSallesForForm() {

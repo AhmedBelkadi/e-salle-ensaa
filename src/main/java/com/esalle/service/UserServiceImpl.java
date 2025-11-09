@@ -13,11 +13,9 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
     
     private final UserRepository userRepository;
-    private final NotificationServiceImpl notificationService;
     
     public UserServiceImpl() {
         this.userRepository = new UserRepositoryImpl();
-        this.notificationService = new NotificationServiceImpl();
     }
     
     @Override
@@ -45,26 +43,6 @@ public class UserServiceImpl implements UserService {
         }
         
         User savedUser = userRepository.save(user);
-        
-        // Envoyer notification à l'admin (sauf pour MEMBRE_CLUB auto-validé)
-        if (savedUser.getStatut() == User.UserStatus.EN_ATTENTE) {
-            String userName = savedUser.getPrenom() + " " + savedUser.getNom();
-            String userRole = savedUser.getRole().toString();
-            notificationService.notifyAdminNewRegistration(
-                "admin@ensaa.ma", 
-                "+212600000000", // Numéro WhatsApp admin (à configurer)
-                userName, 
-                userRole
-            );
-        } else if (savedUser.getRole() == User.UserRole.MEMBRE_CLUB) {
-            // Notifier le membre de club de son auto-validation
-            String userName = savedUser.getPrenom() + " " + savedUser.getNom();
-            notificationService.notifyUserAccountApproved(
-                savedUser.getEmail(),
-                savedUser.getTelephone(),
-                userName
-            );
-        }
         
         return savedUser;
     }
@@ -150,14 +128,6 @@ public class UserServiceImpl implements UserService {
         
         User updatedUser = userRepository.save(user);
         
-        // Envoyer notification au user
-        String userName = updatedUser.getPrenom() + " " + updatedUser.getNom();
-        notificationService.notifyUserAccountApproved(
-            updatedUser.getEmail(),
-            updatedUser.getTelephone(),
-            userName
-        );
-        
         return updatedUser;
     }
     
@@ -171,14 +141,6 @@ public class UserServiceImpl implements UserService {
         user.setApprovedBy(refusedBy);
         
         User updatedUser = userRepository.save(user);
-        
-        // Envoyer notification au user
-        String userName = updatedUser.getPrenom() + " " + updatedUser.getNom();
-        notificationService.notifyUserAccountRefused(
-            updatedUser.getEmail(),
-            updatedUser.getTelephone(),
-            userName
-        );
         
         return updatedUser;
     }

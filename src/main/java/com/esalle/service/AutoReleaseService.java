@@ -6,8 +6,6 @@ import com.esalle.repository.ReservationRepository;
 import com.esalle.repository.ReservationRepositoryImpl;
 import com.esalle.repository.EmploiDuTempsRepository;
 import com.esalle.repository.EmploiDuTempsRepositoryImpl;
-import com.esalle.service.NotificationService;
-import com.esalle.service.NotificationServiceImpl;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,7 +26,6 @@ public class AutoReleaseService {
     // Repositories non initialisés dans le constructeur (lazy initialization)
     private ReservationRepository reservationRepository;
     private EmploiDuTempsRepository emploiRepository;
-    private NotificationService notificationService;
 
     /**
      * Constructeur vide - les repositories seront créés lors de leur première utilisation
@@ -47,9 +44,6 @@ public class AutoReleaseService {
         }
         if (emploiRepository == null) {
             emploiRepository = new EmploiDuTempsRepositoryImpl();
-        }
-        if (notificationService == null) {
-            notificationService = new NotificationServiceImpl();
         }
     }
 
@@ -84,9 +78,6 @@ public class AutoReleaseService {
                                 "✅ Réservation %d libérée automatiquement (Salle: %s, Date: %s)",
                                 reservation.getId(), reservation.getSalleNom(), reservation.getDateReservation()
                         ));
-
-                        // TODO: Notifier le responsable et le professeur
-                        // notificationService.notifyReservationReleased(...);
                     }
                 }
             }
@@ -150,8 +141,6 @@ public class AutoReleaseService {
                                 "❌ Réservation %d annulée automatiquement (délai dépassé)",
                                 reservation.getId()
                         ));
-
-                        // TODO: Notifier l'utilisateur
                     }
                 }
             }
