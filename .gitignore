@@ -79,5 +79,5 @@ application-local.properties
 *.ods
 
 # hibernate
-hibernate.cfg.xml
+src/main/resources/hibernate.cfg.xml
 *.tex
