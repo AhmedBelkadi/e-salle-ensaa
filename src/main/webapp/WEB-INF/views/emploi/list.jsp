@@ -138,11 +138,36 @@
                     </div>
                     <!-- Modal Body -->
                     <div class="p-6">
-                        <form method="POST" action="${pageContext.request.contextPath}/emploi/save" class="space-y-4">
+                        <!-- Error Message Display -->
+                        <div id="errorMessage" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-exclamation-circle text-red-600"></i>
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-red-900">Erreur</h3>
+                                    <p id="errorText" class="text-sm text-red-700 mt-1"></p>
+                                </div>
+                                <button type="button" onclick="document.getElementById('errorMessage').classList.add('hidden')" class="text-red-400 hover:text-red-600">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Success Message Display -->
+                        <div id="successMessage" class="hidden mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-check-circle text-green-600"></i>
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-green-900">Succès</h3>
+                                    <p id="successText" class="text-sm text-green-700 mt-1"></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form method="POST" action="${pageContext.request.contextPath}/emploi/save" class="space-y-4" id="scheduleForm" onsubmit="return submitScheduleForm(event)">
                             <input type="hidden" name="filiereId" id="formFiliereId" required 
                                    value="${isCoordinateur && not empty filieres ? (not empty selectedFiliereId ? selectedFiliereId : filieres[0].id) : ''}">
                             <input type="hidden" name="annee" id="formAnnee" 
-                                   value="${isCoordinateur && not empty filieres ? (not empty selectedFiliereId && not empty selectedAnnee ? selectedAnnee : filieres[0].annee) : '1'}">
+                                   value="${isCoordinateur && not empty filieres ? (not empty selectedFiliereId && not empty selectedAnnee ? selectedAnnee : (not empty filieres[0].annee ? filieres[0].annee : '1')) : '1'}">
                             <input type="hidden" name="jourSemaine" id="formJourSemaine" required>
                             <input type="hidden" name="heureDebut" id="formHeureDebut" required>
                             <input type="hidden" name="heureFin" id="formHeureFin" required>
@@ -165,7 +190,7 @@
                             <div id="dayTimeSelectors" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-gray-700 font-medium block mb-2">Jour <span class="text-red-500">*</span></label>
-                                    <select id="daySelect" required
+                                    <select id="daySelect"
                                             class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                                         <option value="">Sélectionner un jour</option>
                                         <option value="LUNDI">Lundi</option>
@@ -178,7 +203,7 @@
                                 </div>
                                 <div>
                                     <label class="text-gray-700 font-medium block mb-2">Créneau Horaire <span class="text-red-500">*</span></label>
-                                    <select id="timeSlotSelect" required
+                                    <select id="timeSlotSelect"
                                             class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                                         <option value="">Sélectionner un créneau</option>
                                         <option value="08:30-10:30">08:30-10:30</option>
@@ -830,6 +855,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const formHeureDebut = document.getElementById('formHeureDebut');
     const formHeureFin = document.getElementById('formHeureFin');
     const formFiliereId = document.getElementById('formFiliereId');
+    const formAnnee = document.getElementById('formAnnee');
     const branchSelect = document.getElementById('branchSelect');
     const typeSeanceSelect = document.getElementById('typeSeanceSelect');
     const salleSelect = document.getElementById('salleSelect');
@@ -857,6 +883,7 @@ document.addEventListener('DOMContentLoaded', function() {
             scheduleModal.classList.add('hidden');
             document.body.style.overflow = ''; // Restore body scroll
         }
+        hideMessages();
         resetForm();
     }
     
@@ -865,6 +892,7 @@ document.addEventListener('DOMContentLoaded', function() {
         addScheduleBtn.addEventListener('click', function() {
             selectedInfo.textContent = '';
             if (dayTimeSelectors) dayTimeSelectors.classList.remove('hidden');
+            hideMessages();
             resetForm();
             openModal();
         });
@@ -951,8 +979,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isCoordinateur && coordinateurFiliereId && formFiliereId) {
         formFiliereId.value = coordinateurFiliereId;
     }
-    if (isCoordinateur && coordinateurAnnee && formAnnee) {
-        formAnnee.value = coordinateurAnnee;
+    if (formAnnee) {
+        if (isCoordinateur && coordinateurAnnee) {
+            formAnnee.value = coordinateurAnnee;
+        } else if (!formAnnee.value || formAnnee.value.trim() === '') {
+            formAnnee.value = '1'; // Valeur par défaut
+        }
     }
     
     // Filter matieres when filiere is selected (for admin)
@@ -1058,6 +1090,9 @@ function filterMatieresByFiliere() {
     
     if (!subjectSelect || !allMatieres.length) return;
     
+    // Preserve currently selected value
+    const currentValue = subjectSelect.value;
+    
     // Get selected filiere ID
     let targetFiliereId = null;
     if (branchSelect && branchSelect.value) {
@@ -1073,12 +1108,19 @@ function filterMatieresByFiliere() {
     subjectSelect.innerHTML = '<option value="">Sélectionner une matière</option>';
     
     // Filter and add matieres
+    let foundCurrentValue = false;
     allMatieres.forEach(matiere => {
         // For coordinateurs, matieres are already filtered on server
         // Just show all matieres that are in the allMatieres array
         // For admins, filter by selected filiere from dropdown
+        let shouldAdd = false;
         if (isCoordinateur) {
-            // Show all matieres (already filtered on server by coordinateur's filieres)
+            shouldAdd = true;
+        } else if (isAdmin) {
+            shouldAdd = !targetFiliereId || matiere.filiereId === targetFiliereId;
+        }
+        
+        if (shouldAdd) {
             const option = document.createElement('option');
             option.value = matiere.value;
             option.textContent = matiere.text;
@@ -1086,25 +1128,26 @@ function filterMatieresByFiliere() {
             option.setAttribute('data-prof', matiere.profId);
             option.setAttribute('data-prof-nom', matiere.profNom);
             subjectSelect.appendChild(option);
-        } else if (isAdmin) {
-            // For admins, filter by selected filiere
-            if (!targetFiliereId || matiere.filiereId === targetFiliereId) {
-                const option = document.createElement('option');
-                option.value = matiere.value;
-                option.textContent = matiere.text;
-                option.setAttribute('data-filiere', matiere.filiereId);
-                option.setAttribute('data-prof', matiere.profId);
-                option.setAttribute('data-prof-nom', matiere.profNom);
-                subjectSelect.appendChild(option);
+            
+            // Check if this is the previously selected value
+            if (currentValue && matiere.value === currentValue) {
+                foundCurrentValue = true;
             }
         }
     });
     
-    // Reset professor fields
-    const professorId = document.getElementById('professorId');
-    const professorNom = document.getElementById('professorNom');
-    if (professorId) professorId.value = '';
-    if (professorNom) professorNom.value = '';
+    // Restore previously selected value if it still exists
+    if (currentValue && foundCurrentValue) {
+        subjectSelect.value = currentValue;
+        // Update professor fields if value was restored
+        updateProfesseur();
+    } else {
+        // Reset professor fields only if value was not restored
+        const professorId = document.getElementById('professorId');
+        const professorNom = document.getElementById('professorNom');
+        if (professorId) professorId.value = '';
+        if (professorNom) professorNom.value = '';
+    }
 }
 
 function updateProfesseur() {
@@ -1124,6 +1167,527 @@ function updateProfesseur() {
             professeurNomInput.value = '';
         }
     }
+}
+
+// Validate form before submission
+function validateScheduleForm(event) {
+    const formJourSemaine = document.getElementById('formJourSemaine');
+    const formHeureDebut = document.getElementById('formHeureDebut');
+    const formHeureFin = document.getElementById('formHeureFin');
+    const daySelect = document.getElementById('daySelect');
+    const timeSlotSelect = document.getElementById('timeSlotSelect');
+    const dayTimeSelectors = document.getElementById('dayTimeSelectors');
+    
+    // Check if day/time selectors are visible (not hidden by clicking on cell)
+    const isDayTimeVisible = dayTimeSelectors && !dayTimeSelectors.classList.contains('hidden');
+    
+    // If day/time selectors are visible, check if they are filled
+    if (isDayTimeVisible) {
+        if (!daySelect || !daySelect.value) {
+            showError('Veuillez sélectionner un jour');
+            if (daySelect) daySelect.focus();
+            event.preventDefault();
+            return false;
+        }
+        
+        if (!timeSlotSelect || !timeSlotSelect.value) {
+            showError('Veuillez sélectionner un créneau horaire');
+            if (timeSlotSelect) timeSlotSelect.focus();
+            event.preventDefault();
+            return false;
+        }
+        
+        // Update hidden fields from selects
+        if (formJourSemaine) formJourSemaine.value = daySelect.value;
+        const times = timeSlotSelect.value.split('-');
+        if (formHeureDebut && times[0]) formHeureDebut.value = times[0];
+        if (formHeureFin && times[1]) formHeureFin.value = times[1];
+    }
+    
+    // Check if hidden fields are filled (either from selects or from cell click)
+    if (!formJourSemaine || !formJourSemaine.value) {
+        showError('Veuillez sélectionner un jour (cliquez sur une cellule ou utilisez le sélecteur)');
+        event.preventDefault();
+        return false;
+    }
+    
+    if (!formHeureDebut || !formHeureDebut.value) {
+        showError('Veuillez sélectionner un créneau horaire (cliquez sur une cellule ou utilisez le sélecteur)');
+        event.preventDefault();
+        return false;
+    }
+    
+    if (!formHeureFin || !formHeureFin.value) {
+        showError('Veuillez sélectionner un créneau horaire (cliquez sur une cellule ou utilisez le sélecteur)');
+        event.preventDefault();
+        return false;
+    }
+    
+    // Check other required fields
+    const formFiliereId = document.getElementById('formFiliereId');
+    if (!formFiliereId || !formFiliereId.value) {
+        showError('Veuillez sélectionner une filière');
+        event.preventDefault();
+        return false;
+    }
+    
+    const subjectSelect = document.getElementById('subjectSelect');
+    if (!subjectSelect || !subjectSelect.value) {
+        showError('Veuillez sélectionner une matière');
+        if (subjectSelect) subjectSelect.focus();
+        event.preventDefault();
+        return false;
+    }
+    
+    const professorId = document.getElementById('professorId');
+    if (!professorId || !professorId.value) {
+        showError('Veuillez sélectionner une matière pour voir le professeur');
+        event.preventDefault();
+        return false;
+    }
+    
+    const salleSelect = document.getElementById('salleSelect');
+    if (!salleSelect || !salleSelect.value) {
+        showError('Veuillez sélectionner une salle');
+        if (salleSelect) salleSelect.focus();
+        event.preventDefault();
+        return false;
+    }
+    
+    // All validations passed
+    return true;
+}
+
+// Submit form via AJAX for better UX
+function submitScheduleForm(event) {
+    event.preventDefault();
+    
+    // Get form and submit button first
+    const form = document.getElementById('scheduleForm');
+    if (!form) {
+        console.error('Form not found!');
+        return false;
+    }
+    
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.innerHTML : 'Ajouter Séance';
+    
+    // Hide previous messages
+    hideMessages();
+    
+    // Validate form first
+    if (!validateScheduleForm(event)) {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        return false;
+    }
+    
+    // Get form data
+    const formData = new FormData(form);
+    
+    // Debug: Log form data to console
+    console.log('Form Data:');
+    for (let [key, value] of formData.entries()) {
+        console.log(key + ': ' + value);
+    }
+    
+    // Double-check and ensure all critical fields are included
+    const subjectSelect = document.getElementById('subjectSelect');
+    if (!subjectSelect) {
+        console.error('subjectSelect element not found!');
+        showError('Erreur: Le champ matière est introuvable');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        return false;
+    }
+    
+    const matiereIdValue = subjectSelect.value;
+    if (!matiereIdValue || matiereIdValue.trim() === '' || matiereIdValue === '0') {
+        console.error('subjectSelect value is empty or invalid!', {
+            value: matiereIdValue,
+            selectedIndex: subjectSelect.selectedIndex,
+            optionsCount: subjectSelect.options.length,
+            selectedOption: subjectSelect.options[subjectSelect.selectedIndex]?.text
+        });
+        showError('Veuillez sélectionner une matière');
+        if (subjectSelect) subjectSelect.focus();
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        return false;
+    }
+    
+    // Verify the selected option exists and is valid
+    const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
+    if (!selectedOption || !selectedOption.value || selectedOption.value.trim() === '') {
+        console.error('Selected option is invalid!', selectedOption);
+        showError('La matière sélectionnée n\'est pas valide. Veuillez en sélectionner une autre.');
+        if (subjectSelect) subjectSelect.focus();
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        return false;
+    }
+    
+    formData.set('matiereId', matiereIdValue);
+    console.log('matiereId validated and set to: ' + matiereIdValue);
+    
+    // Ensure other critical fields are set
+    const professorId = document.getElementById('professorId');
+    if (professorId && professorId.value) {
+        formData.set('professeurId', professorId.value);
+    }
+    
+    const formFiliereId = document.getElementById('formFiliereId');
+    if (formFiliereId && formFiliereId.value) {
+        formData.set('filiereId', formFiliereId.value);
+    }
+    
+    const formAnnee = document.getElementById('formAnnee');
+    if (formAnnee && formAnnee.value) {
+        formData.set('annee', formAnnee.value);
+    }
+    
+    const formJourSemaine = document.getElementById('formJourSemaine');
+    if (formJourSemaine && formJourSemaine.value) {
+        formData.set('jourSemaine', formJourSemaine.value);
+    }
+    
+    const formHeureDebut = document.getElementById('formHeureDebut');
+    if (formHeureDebut && formHeureDebut.value) {
+        formData.set('heureDebut', formHeureDebut.value);
+    }
+    
+    const formHeureFin = document.getElementById('formHeureFin');
+    if (formHeureFin && formHeureFin.value) {
+        formData.set('heureFin', formHeureFin.value);
+    }
+    
+    const salleSelect = document.getElementById('salleSelect');
+    if (salleSelect && salleSelect.value) {
+        formData.set('salleId', salleSelect.value);
+    }
+    
+    const typeSeanceSelect = document.getElementById('typeSeanceSelect');
+    if (typeSeanceSelect && typeSeanceSelect.value) {
+        formData.set('typeSeance', typeSeanceSelect.value);
+    }
+    
+    // Disable submit button and show loading state
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin w-4 h-4"></i> Enregistrement...';
+    }
+    
+    // Submit via AJAX
+    // Build URLSearchParams instead of FormData to use application/x-www-form-urlencoded
+    // This ensures the servlet can parse the parameters correctly
+    const params = new URLSearchParams();
+    
+    // Get all form values with proper validation
+    const matiereId = matiereIdValue;
+    const professeurId = document.getElementById('professorId')?.value || '';
+    const salleId = document.getElementById('salleSelect')?.value || '';
+    const filiereId = document.getElementById('formFiliereId')?.value || '';
+    const annee = document.getElementById('formAnnee')?.value || '';
+    const jourSemaine = document.getElementById('formJourSemaine')?.value || '';
+    const heureDebut = document.getElementById('formHeureDebut')?.value || '';
+    const heureFin = document.getElementById('formHeureFin')?.value || '';
+    const typeSeance = document.getElementById('typeSeanceSelect')?.value || '';
+    const groupeValue = document.getElementById('groupeSelect')?.value || '';
+    
+    // Validate all required fields
+    if (!matiereId || matiereId.trim() === '' || matiereId === '0') {
+        showError('Veuillez sélectionner une matière');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        return false;
+    }
+    if (!professeurId || professeurId.trim() === '') {
+        showError('Le professeur est requis');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        return false;
+    }
+    if (!salleId || salleId.trim() === '' || salleId === '0') {
+        showError('Veuillez sélectionner une salle');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        return false;
+    }
+    if (!filiereId || filiereId.trim() === '') {
+        showError('La filière est requise');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        return false;
+    }
+    if (!annee || annee.trim() === '') {
+        showError('L\'année est requise');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        return false;
+    }
+    if (!jourSemaine || jourSemaine.trim() === '') {
+        showError('Le jour de la semaine est requis');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        return false;
+    }
+    if (!heureDebut || heureDebut.trim() === '') {
+        showError('L\'heure de début est requise');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        return false;
+    }
+    if (!heureFin || heureFin.trim() === '') {
+        showError('L\'heure de fin est requise');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        return false;
+    }
+    if (!typeSeance || typeSeance.trim() === '') {
+        showError('Le type de séance est requis');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+        return false;
+    }
+    
+    // Set all parameters
+    params.set('matiereId', matiereId);
+    params.set('professeurId', professeurId);
+    params.set('salleId', salleId);
+    params.set('filiereId', filiereId);
+    params.set('annee', annee);
+    params.set('jourSemaine', jourSemaine);
+    params.set('heureDebut', heureDebut);
+    params.set('heureFin', heureFin);
+    params.set('typeSeance', typeSeance);
+    if (groupeValue && groupeValue.trim() !== '') {
+        params.set('groupe', groupeValue);
+    }
+    
+    console.log('Final params before sending:');
+    for (let [key, value] of params.entries()) {
+        console.log('  ' + key + ': ' + value);
+    }
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: params.toString(), // Send as URL-encoded string
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        }
+    })
+    .then(response => {
+        // Check if response is a redirect (success for non-AJAX fallback)
+        if (response.redirected) {
+            // Success - redirect to list page
+            window.location.href = response.url;
+            return;
+        }
+        
+        // Check content type
+        const contentType = response.headers.get('content-type');
+        
+        // Always try to get the response as text first to see what we're dealing with
+        return response.text().then(text => {
+            console.log('Response status:', response.status);
+            console.log('Response content-type:', contentType);
+            console.log('Response text (full):', text);
+            
+            // Try to parse as JSON first (even if content-type is not JSON)
+            let json = null;
+            try {
+                json = JSON.parse(text);
+                console.log('Parsed JSON:', json);
+            } catch (e) {
+                console.log('Response is not JSON, trying to extract error from text');
+            }
+            
+            // If we have JSON, use it
+            if (json) {
+                if (json.success) {
+                    showSuccess(json.message || 'Séance créée avec succès');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                    return;
+                } else if (json.error) {
+                    showError(json.error);
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                    return;
+                }
+            }
+            
+            // If status is not OK, it's an error
+            if (!response.ok) {
+                let errorMessage = 'Une erreur est survenue lors de l\'enregistrement';
+                
+                // If we have JSON with error, use it
+                if (json && json.error) {
+                    errorMessage = json.error;
+                } else {
+                    // Not JSON, try to extract from HTML or text
+                    if (text && text.length > 0) {
+                        // Try to extract error message from HTML
+                        if (text.includes('error') || text.includes('Conflit') || text.includes('Erreur') || text.includes('BusinessException')) {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(text, 'text/html');
+                            const errorElement = doc.querySelector('.error, [class*="error"], .alert-danger, [class*="alert"], #errorMessage, body');
+                            
+                            if (errorElement) {
+                                const errorText = errorElement.textContent || errorElement.innerText;
+                                if (errorText && errorText.trim().length > 0) {
+                                    // Extract meaningful error message
+                                    const lines = errorText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                                    for (let line of lines) {
+                                        if (line.includes('Conflit') || line.includes('erreur') || line.includes('Erreur') || 
+                                            line.includes('requis') || line.includes('obligatoire') || line.includes('BusinessException') ||
+                                            line.length > 10) { // Take longer lines as they're more likely to be error messages
+                                            if (line.length < 200) { // But not too long
+                                                errorMessage = line;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Fallback: search for common error patterns
+                            if (errorMessage === 'Une erreur est survenue lors de l\'enregistrement') {
+                                if (text.includes('Conflit d\'horaire')) {
+                                    errorMessage = 'Conflit d\'horaire : la salle est déjà réservée à cet horaire.';
+                                } else if (text.includes('professeur n\'est pas disponible')) {
+                                    errorMessage = 'Conflit d\'horaire : le professeur n\'est pas disponible à cet horaire.';
+                                } else if (text.includes('BusinessException')) {
+                                    // Try to extract message from exception
+                                    const match = text.match(/BusinessException[^>]*>([^<]+)/) || 
+                                                 text.match(/BusinessException[^:]*:\s*([^\n<]+)/) ||
+                                                 text.match(/error[^>]*>([^<]+)/i);
+                                    if (match && match[1]) {
+                                        errorMessage = match[1].trim();
+                                    }
+                                } else if (text.includes('La matière')) {
+                                    // Extract any message containing "La matière"
+                                    const match = text.match(/La matière[^.!?]+[.!?]/);
+                                    if (match) {
+                                        errorMessage = match[0];
+                                    }
+                                }
+                            }
+                        } else {
+                            // If text is short and looks like an error message, use it
+                            if (text.length < 200 && text.trim().length > 0) {
+                                errorMessage = text.trim();
+                            }
+                        }
+                    }
+                }
+                
+                console.error('Error message to display:', errorMessage);
+                showError(errorMessage);
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+                return;
+            }
+            
+            // If we get here and response is OK, it might be a success
+            if (response.ok) {
+                showSuccess('Séance créée avec succès');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showError('Une erreur est survenue lors de l\'enregistrement');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            }
+        });
+    })
+    .catch(error => {
+        console.error('Fetch Error:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack
+        });
+        showError('Une erreur est survenue lors de l\'enregistrement. Veuillez réessayer. (' + error.message + ')');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    });
+    
+    return false;
+}
+
+// Show error message in modal
+function showError(message) {
+    const errorDiv = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+    const successDiv = document.getElementById('successMessage');
+    
+    if (errorDiv && errorText) {
+        errorText.textContent = message;
+        errorDiv.classList.remove('hidden');
+        successDiv.classList.add('hidden');
+        
+        // Scroll to error message
+        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+
+// Show success message in modal
+function showSuccess(message) {
+    const successDiv = document.getElementById('successMessage');
+    const successText = document.getElementById('successText');
+    const errorDiv = document.getElementById('errorMessage');
+    
+    if (successDiv && successText) {
+        successText.textContent = message;
+        successDiv.classList.remove('hidden');
+        errorDiv.classList.add('hidden');
+    }
+}
+
+// Hide all messages
+function hideMessages() {
+    const errorDiv = document.getElementById('errorMessage');
+    const successDiv = document.getElementById('successMessage');
+    
+    if (errorDiv) errorDiv.classList.add('hidden');
+    if (successDiv) successDiv.classList.add('hidden');
 }
 </script>
 </c:if>
