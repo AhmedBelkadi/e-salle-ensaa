@@ -238,8 +238,10 @@ public class MatiereServlet extends HttpServlet {
             filieres = filiereService.getAllFilieres();
         }
         
+        // Include both PROFESSEUR and COORDINATEUR as professors
         List<User> professeurs = userService.findAll().stream()
-            .filter(u -> u.getRole() == User.UserRole.PROFESSEUR && u.getStatut() == User.UserStatus.ACTIF)
+            .filter(u -> (u.getRole() == User.UserRole.PROFESSEUR || u.getRole() == User.UserRole.COORDINATEUR) 
+                        && u.getStatut() == User.UserStatus.ACTIF)
             .collect(Collectors.toList());
         
         request.setAttribute("filieres", filieres);
@@ -278,8 +280,10 @@ public class MatiereServlet extends HttpServlet {
             filieres = filiereService.getAllFilieres();
         }
         
+        // Include both PROFESSEUR and COORDINATEUR as professors
         List<User> professeurs = userService.findAll().stream()
-            .filter(u -> u.getRole() == User.UserRole.PROFESSEUR && u.getStatut() == User.UserStatus.ACTIF)
+            .filter(u -> (u.getRole() == User.UserRole.PROFESSEUR || u.getRole() == User.UserRole.COORDINATEUR) 
+                        && u.getStatut() == User.UserStatus.ACTIF)
             .collect(Collectors.toList());
         
         request.setAttribute("matiere", matiere);
@@ -376,4 +380,3 @@ public class MatiereServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/matieres/list?success=deleted");
     }
 }
-

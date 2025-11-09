@@ -18,7 +18,7 @@ public class AuthServlet extends HttpServlet {
     
     @Override
     public void init() throws ServletException {
-    userService = new UserServiceImpl();    
+        userService = new UserServiceImpl();    
     }
     
     @Override

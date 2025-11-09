@@ -39,6 +39,9 @@ temp/
 # Report (LaTeX - not for production)
 report/
 
+# Diagrams
+diagrams/
+
 # UI Template
 ui-templete/
 # Docker

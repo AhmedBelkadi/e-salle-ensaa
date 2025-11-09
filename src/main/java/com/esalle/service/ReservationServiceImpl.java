@@ -3,17 +3,21 @@ package com.esalle.service;
 import com.esalle.entity.Reservation;
 import com.esalle.entity.Salle;
 import com.esalle.entity.User;
+import com.esalle.entity.EmploiDuTemps;
 import com.esalle.repository.ReservationRepository;
 import com.esalle.repository.ReservationRepositoryImpl;
 import com.esalle.repository.SalleRepository;
 import com.esalle.repository.SalleRepositoryImpl;
 import com.esalle.repository.UserRepository;
 import com.esalle.repository.UserRepositoryImpl;
+import com.esalle.service.EmploiDuTempsService;
+import com.esalle.service.EmploiDuTempsServiceImpl;
 import com.esalle.exception.BusinessException;
 import com.esalle.exception.NotFoundException;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.DayOfWeek;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,11 +27,13 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationRepository reservationRepository;
     private final SalleRepository salleRepository;
     private final UserRepository userRepository;
+    private final EmploiDuTempsService emploiDuTempsService;
 
     public ReservationServiceImpl() {
         this.reservationRepository = new ReservationRepositoryImpl();
         this.salleRepository = new SalleRepositoryImpl();
         this.userRepository = new UserRepositoryImpl();
+        this.emploiDuTempsService = new EmploiDuTempsServiceImpl();
     }
 
     @Override
@@ -82,10 +88,18 @@ public class ReservationServiceImpl implements ReservationService {
             throw new BusinessException("Les salles TP ne peuvent pas être réservées par les clubs (sauf libération exceptionnelle).");
         }
 
-        // Vérifier les conflits
+        // Vérifier les conflits avec les réservations existantes
         if (verifierConflitSalle(reservation.getSalleId(), reservation.getDateReservation(),
                                 reservation.getHeureDebut(), reservation.getHeureFin(), null)) {
             throw new BusinessException("Conflit d'horaire : la salle est déjà réservée à cet horaire.");
+        }
+
+        // Vérifier les conflits avec l'emploi du temps (pour PROFESSEUR et COORDINATEUR uniquement)
+        if (user.getRole() == User.UserRole.PROFESSEUR || user.getRole() == User.UserRole.COORDINATEUR) {
+            if (verifierConflitEmploiDuTemps(reservation.getSalleId(), reservation.getDateReservation(),
+                                            reservation.getHeureDebut(), reservation.getHeureFin())) {
+                throw new BusinessException("Conflit d'horaire : la salle est déjà utilisée dans l'emploi du temps à cet horaire.");
+            }
         }
 
         reservation.setStatut(Reservation.StatutReservation.EN_ATTENTE);
@@ -294,5 +308,49 @@ public class ReservationServiceImpl implements ReservationService {
                 return Reservation.TypeSalleReservation.COURS;
         }
     }
-}
 
+    /**
+     * Vérifie si une réservation entre en conflit avec l'emploi du temps
+     * @param salleId ID de la salle
+     * @param date Date de la réservation
+     * @param heureDebut Heure de début
+     * @param heureFin Heure de fin
+     * @return true si conflit, false sinon
+     */
+    private boolean verifierConflitEmploiDuTemps(Long salleId, LocalDate date, LocalTime heureDebut, LocalTime heureFin) {
+        // Convertir la date en jour de la semaine
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        EmploiDuTemps.JourSemaine jourSemaine = convertDayOfWeekToJourSemaine(dayOfWeek);
+        
+        // Si c'est dimanche, il n'y a pas de cours dans l'emploi du temps
+        if (jourSemaine == null) {
+            return false;
+        }
+        
+        // Vérifier les conflits avec l'emploi du temps
+        return emploiDuTempsService.verifierConflitSalle(salleId, jourSemaine, heureDebut, heureFin, null);
+    }
+
+    /**
+     * Convertit DayOfWeek en JourSemaine de l'emploi du temps
+     */
+    private EmploiDuTemps.JourSemaine convertDayOfWeekToJourSemaine(DayOfWeek dayOfWeek) {
+        switch (dayOfWeek) {
+            case MONDAY:
+                return EmploiDuTemps.JourSemaine.LUNDI;
+            case TUESDAY:
+                return EmploiDuTemps.JourSemaine.MARDI;
+            case WEDNESDAY:
+                return EmploiDuTemps.JourSemaine.MERCREDI;
+            case THURSDAY:
+                return EmploiDuTemps.JourSemaine.JEUDI;
+            case FRIDAY:
+                return EmploiDuTemps.JourSemaine.VENDREDI;
+            case SATURDAY:
+                return EmploiDuTemps.JourSemaine.SAMEDI;
+            default:
+                // Dimanche n'est pas un jour de cours
+                return null;
+        }
+    }
+}

@@ -466,13 +466,48 @@ public class EmploiDuTempsServlet extends HttpServlet {
                 emploi.setId(Long.parseLong(idStr));
             }
             
-            Long filiereId = Long.parseLong(request.getParameter("filiereId"));
+            Long filiereId;
+            Integer annee;
+            List<Filiere> coordinateurFilieres = null;
+            
+            // Si c'est un coordinateur, déterminer automatiquement la filière et l'année
+            if (currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR) {
+                coordinateurFilieres = filiereService.getFilieresByCoordinateur(currentUser.getId());
+                if (coordinateurFilieres == null || coordinateurFilieres.isEmpty()) {
+                    session.setAttribute("error", "Aucune filière assignée. Veuillez contacter l'administrateur.");
+                    response.sendRedirect(request.getContextPath() + "/emploi/list");
+                    return;
+                }
+                // Utiliser la première filière du coordinateur
+                filiereId = coordinateurFilieres.get(0).getId();
+                // Pour l'année, on peut la déterminer à partir de la filière ou utiliser la matière
+                // Si en mode édition, utiliser l'année de l'emploi existant
+                if (idStr != null && !idStr.isEmpty()) {
+                    EmploiDuTemps existingEmploi = emploiService.getEmploiDuTempsById(Long.parseLong(idStr)).orElse(null);
+                    if (existingEmploi != null) {
+                        annee = existingEmploi.getAnnee();
+                        filiereId = existingEmploi.getFiliereId();
+                    } else {
+                        // Sinon utiliser l'année de la filière
+                        annee = coordinateurFilieres.get(0).getAnnee();
+                    }
+                } else {
+                    // Mode création: utiliser l'année de la filière
+                    annee = coordinateurFilieres.get(0).getAnnee();
+                }
+            } else {
+                // Admin: utiliser les paramètres du formulaire
+                filiereId = Long.parseLong(request.getParameter("filiereId"));
+                annee = Integer.parseInt(request.getParameter("annee"));
+            }
+            
+            // Créer des copies finales pour les lambdas
+            final Long finalFiliereId = filiereId;
             
             // Vérification de sécurité: si c'est un coordinateur, vérifier qu'il peut créer pour cette filière
-            if (currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR) {
-                List<Filiere> coordinateurFilieres = filiereService.getFilieresByCoordinateur(currentUser.getId());
-                boolean canAccess = coordinateurFilieres != null && 
-                    coordinateurFilieres.stream().anyMatch(f -> f.getId().equals(filiereId));
+            if (currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR && coordinateurFilieres != null) {
+                boolean canAccess = coordinateurFilieres.stream()
+                    .anyMatch(f -> f.getId().equals(finalFiliereId));
                 
                 if (!canAccess) {
                     session.setAttribute("error", "Vous n'avez pas la permission de créer un emploi du temps pour cette filière.");
@@ -482,7 +517,7 @@ public class EmploiDuTempsServlet extends HttpServlet {
             }
             
             emploi.setFiliereId(filiereId);
-            emploi.setAnnee(Integer.parseInt(request.getParameter("annee")));
+            emploi.setAnnee(annee);
             emploi.setMatiereId(Long.parseLong(request.getParameter("matiereId")));
             emploi.setProfesseurId(Long.parseLong(request.getParameter("professeurId")));
             emploi.setSalleId(Long.parseLong(request.getParameter("salleId")));
@@ -537,4 +572,3 @@ public class EmploiDuTempsServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/emploi/list?success=deleted");
     }
 }
-
