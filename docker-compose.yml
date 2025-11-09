@@ -33,6 +33,7 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: password
       JAVA_OPTS: "-Xmx512m -Xms256m -Dspring.profiles.active=docker"
+      SEED_DB: "true"
     ports:
       - "8080:8080"
     depends_on:
@@ -50,7 +51,7 @@ services:
       retries: 3
       start_period: 60s
 
-  # Nginx Reverse Proxy (Optional)
+  # Nginx Reverse Proxy 
   nginx:
     image: nginx:alpine
     container_name: esalle-nginx
