@@ -36,6 +36,8 @@ Thumbs.db
 uploads/
 temp/
 
+diagrams/
+
 # Report (LaTeX - not for production)
 report/
 
@@ -78,3 +80,4 @@ application-local.properties
 
 # hibernate
 hibernate.cfg.xml
+*.tex
