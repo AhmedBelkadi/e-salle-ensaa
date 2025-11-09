@@ -5,8 +5,8 @@
     <jsp:param name="title" value="Emploi du Temps - E-Salle ENSAA"/>
 </jsp:include>
 
-<div class="flex-1 p-6">
-    <div class="space-y-6 max-w-7xl mx-auto">
+<div class="p-6">
+    <div class="space-y-6">
         <!-- Header Section -->
         <div class="flex justify-between items-center">
             <div>

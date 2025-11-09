@@ -61,7 +61,9 @@ public abstract class BaseRepositoryImpl<T, ID extends Serializable> implements 
     public List<T> findAll() {
         Session session = sessionFactory.openSession();
         try {
-            Query<T> query = session.createQuery("FROM " + entityClass.getSimpleName(), entityClass);
+            // Use fully-qualified class name in HQL to avoid UnknownEntityException when entity names
+            // are not registered as simple names in the SessionFactory metamodel.
+            Query<T> query = session.createQuery("FROM " + entityClass.getName(), entityClass);
             return query.list();
         } catch (Exception e) {
             throw new RuntimeException("Error finding all entities", e);
@@ -129,7 +131,8 @@ public abstract class BaseRepositoryImpl<T, ID extends Serializable> implements 
     public long count() {
         Session session = sessionFactory.openSession();
         try {
-            Query<Long> query = session.createQuery("SELECT COUNT(*) FROM " + entityClass.getSimpleName(), Long.class);
+            // Use fully-qualified class name for the same reason as findAll()
+            Query<Long> query = session.createQuery("SELECT COUNT(*) FROM " + entityClass.getName(), Long.class);
             return query.uniqueResult();
         } catch (Exception e) {
             throw new RuntimeException("Error counting entities", e);

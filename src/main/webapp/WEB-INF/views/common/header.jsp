@@ -76,8 +76,8 @@
                     </a>
                 </c:if>
 
-                <!-- Matières - ADMIN, COORDINATEUR, PROFESSEUR -->
-                <c:if test="${sessionScope.user.role.name() == 'ADMIN' || sessionScope.user.role.name() == 'COORDINATEUR' || sessionScope.user.role.name() == 'PROFESSEUR'}">
+                <!-- Matières - COORDINATEUR, PROFESSEUR (ADMIN removed) -->
+                <c:if test="${sessionScope.user.role.name() == 'COORDINATEUR' || sessionScope.user.role.name() == 'PROFESSEUR'}">
                     <a href="${pageContext.request.contextPath}/matieres/list" class="block">
                         <button class="text-gray-700 hover:bg-gray-100 w-full justify-start gap-3 px-3 py-2 rounded-md flex items-center">
                             <i class="fas fa-book w-4 h-4"></i>

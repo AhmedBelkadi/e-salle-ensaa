@@ -17,7 +17,7 @@ public class SalleRepositoryImpl extends BaseRepositoryImpl<Salle, Long> impleme
         Session session = sessionFactory.openSession();
         try {
             Query<Salle> query = session.createQuery(
-                "FROM Salle s WHERE s.nom = :nom", Salle.class);
+                "FROM " + com.esalle.entity.Salle.class.getName() + " s WHERE s.nom = :nom", Salle.class);
             query.setParameter("nom", nom);
             return query.uniqueResultOptional();
         } finally {
@@ -35,7 +35,7 @@ public class SalleRepositoryImpl extends BaseRepositoryImpl<Salle, Long> impleme
         Session session = sessionFactory.openSession();
         try {
             Query<Salle> query = session.createQuery(
-                "FROM Salle s WHERE s.type = :type ORDER BY s.nom", Salle.class);
+                "FROM " + com.esalle.entity.Salle.class.getName() + " s WHERE s.type = :type ORDER BY s.nom", Salle.class);
             query.setParameter("type", type);
             return query.list();
         } finally {
@@ -48,7 +48,7 @@ public class SalleRepositoryImpl extends BaseRepositoryImpl<Salle, Long> impleme
         Session session = sessionFactory.openSession();
         try {
             Query<Salle> query = session.createQuery(
-                "FROM Salle s WHERE s.disponible = :disponible ORDER BY s.nom", Salle.class);
+                "FROM " + com.esalle.entity.Salle.class.getName() + " s WHERE s.disponible = :disponible ORDER BY s.nom", Salle.class);
             query.setParameter("disponible", disponible);
             return query.list();
         } finally {
@@ -61,7 +61,7 @@ public class SalleRepositoryImpl extends BaseRepositoryImpl<Salle, Long> impleme
         Session session = sessionFactory.openSession();
         try {
             Query<Salle> query = session.createQuery(
-                "FROM Salle s WHERE s.type = :type AND s.disponible = :disponible ORDER BY s.nom", 
+                "FROM " + com.esalle.entity.Salle.class.getName() + " s WHERE s.type = :type AND s.disponible = :disponible ORDER BY s.nom", 
                 Salle.class);
             query.setParameter("type", type);
             query.setParameter("disponible", disponible);
@@ -76,7 +76,7 @@ public class SalleRepositoryImpl extends BaseRepositoryImpl<Salle, Long> impleme
         Session session = sessionFactory.openSession();
         try {
             Query<Salle> query = session.createQuery(
-                "FROM Salle s WHERE s.capacite >= :capaciteMin ORDER BY s.capacite, s.nom", 
+                "FROM " + com.esalle.entity.Salle.class.getName() + " s WHERE s.capacite >= :capaciteMin ORDER BY s.capacite, s.nom", 
                 Salle.class);
             query.setParameter("capaciteMin", capaciteMin);
             return query.list();
@@ -90,7 +90,7 @@ public class SalleRepositoryImpl extends BaseRepositoryImpl<Salle, Long> impleme
         Session session = sessionFactory.openSession();
         try {
             Query<Salle> query = session.createQuery(
-                "FROM Salle s WHERE LOWER(s.nom) LIKE LOWER(:keyword) ORDER BY s.nom", 
+                "FROM " + com.esalle.entity.Salle.class.getName() + " s WHERE LOWER(s.nom) LIKE LOWER(:keyword) ORDER BY s.nom", 
                 Salle.class);
             query.setParameter("keyword", "%" + keyword + "%");
             return query.list();
