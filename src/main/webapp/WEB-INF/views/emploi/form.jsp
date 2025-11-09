@@ -24,37 +24,25 @@
             <form method="POST" action="${pageContext.request.contextPath}/emploi/save" 
                   class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-6">
                 
-                <!-- Filière (cachée pour coordinateur, car automatiquement sa filière) -->
+                <!-- Filière et Année (masquées pour coordinateur, déterminées automatiquement) -->
                 <c:choose>
                     <c:when test="${isCoordinateur == true && not empty filieres}">
-                        <!-- Pour coordinateur, utiliser la première filière automatiquement (ou toutes si plusieurs) -->
-                        <c:if test="${filieres.size() == 1}">
-                            <input type="hidden" name="filiereId" id="filiereId" value="${filieres[0].id}">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    Filière <span class="text-red-500">*</span>
-                                </label>
-                                <input type="text" value="${filieres[0].nom} - ${filieres[0].cycle} ${filieres[0].annee}" 
-                                       readonly
-                                       class="w-full rounded-md border border-gray-300 px-3 py-2 bg-gray-50 focus:outline-none">
-                            </div>
-                        </c:if>
-                        <c:if test="${filieres.size() > 1}">
-                            <div>
-                                <label for="filiereId" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Filière <span class="text-red-500">*</span>
-                                </label>
-                                <select name="filiereId" id="filiereId" required onchange="updateMatieres()"
-                                        class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    <option value="">Sélectionner une filière</option>
-                                    <c:forEach var="filiere" items="${filieres}">
-                                        <option value="${filiere.id}" ${not empty emploi && emploi.filiereId == filiere.id ? 'selected' : ''}>${filiere.nom} - ${filiere.cycle} ${filiere.annee}</option>
-                                    </c:forEach>
-                                </select>
-                            </div>
-                        </c:if>
+                        <!-- Coordinateur: filière et année déterminées automatiquement -->
+                        <c:choose>
+                            <c:when test="${not empty emploi && not empty emploi.filiereId}">
+                                <!-- Mode édition: utiliser la filière et l'année de l'emploi -->
+                                <input type="hidden" name="filiereId" id="filiereId" value="${emploi.filiereId}">
+                                <input type="hidden" name="annee" id="annee" value="${emploi.annee}">
+                            </c:when>
+                            <c:otherwise>
+                                <!-- Mode création: utiliser la première filière disponible et son année -->
+                                <input type="hidden" name="filiereId" id="filiereId" value="${filieres[0].id}">
+                                <input type="hidden" name="annee" id="annee" value="${filieres[0].annee}">
+                            </c:otherwise>
+                        </c:choose>
                     </c:when>
                     <c:otherwise>
+                        <!-- Admin: afficher les champs filière et année -->
                         <div>
                             <label for="filiereId" class="block text-sm font-medium text-gray-700 mb-2">
                                 Filière <span class="text-red-500">*</span>
@@ -67,21 +55,19 @@
                                 </c:forEach>
                             </select>
                         </div>
+                        <div>
+                            <label for="annee" class="block text-sm font-medium text-gray-700 mb-2">
+                                Année <span class="text-red-500">*</span>
+                            </label>
+                            <select name="annee" id="annee" required
+                                    class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="1" ${not empty emploi && emploi.annee == 1 ? 'selected' : ''}>Année 1</option>
+                                <option value="2" ${not empty emploi && emploi.annee == 2 ? 'selected' : ''}>Année 2</option>
+                                <option value="3" ${not empty emploi && emploi.annee == 3 ? 'selected' : ''}>Année 3</option>
+                            </select>
+                        </div>
                     </c:otherwise>
                 </c:choose>
-
-                <!-- Année -->
-                <div>
-                    <label for="annee" class="block text-sm font-medium text-gray-700 mb-2">
-                        Année <span class="text-red-500">*</span>
-                    </label>
-                    <select name="annee" id="annee" required
-                            class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="1" ${not empty emploi && emploi.annee == 1 ? 'selected' : ''}>Année 1</option>
-                        <option value="2" ${not empty emploi && emploi.annee == 2 ? 'selected' : ''}>Année 2</option>
-                        <option value="3" ${not empty emploi && emploi.annee == 3 ? 'selected' : ''}>Année 3</option>
-                    </select>
-                </div>
 
                 <!-- Matière -->
                 <div>
