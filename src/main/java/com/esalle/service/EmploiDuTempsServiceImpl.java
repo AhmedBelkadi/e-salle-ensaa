@@ -16,7 +16,6 @@ import com.esalle.repository.FiliereRepositoryImpl;
 import com.esalle.repository.UserRepository;
 import com.esalle.repository.UserRepositoryImpl;
 import com.esalle.exception.BusinessException;
-import com.esalle.exception.NotFoundException;
 
 import java.time.LocalTime;
 import java.util.ArrayList;

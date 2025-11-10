@@ -3,241 +3,103 @@ package com.esalle.util;
 import com.esalle.entity.User;
 import com.esalle.entity.User.UserRole;
 import com.esalle.entity.User.UserStatus;
-import com.esalle.entity.Salle;
-import com.esalle.entity.Salle.TypeSalle;
-import com.esalle.entity.Filiere;
-import com.esalle.entity.Filiere.Cycle;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.mindrot.jbcrypt.BCrypt;
-
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 import java.util.logging.Logger;
 
 /**
- * Initialise les données de test au démarrage de l'application
- * Crée 4 utilisateurs (un par rôle) + données de démonstration
+ * DataInitializer (minimal): only ensures basic users exist on startup.
+ * Full DB seeding should be performed via SQL script (src/main/resources/db/seed.sql)
+ * This prevents accidental reseeding of environment data by the app on startup.
  */
 @WebListener
 public class DataInitializer implements ServletContextListener {
 
     private static final Logger LOGGER = Logger.getLogger(DataInitializer.class.getName());
-    private static final String DEFAULT_PASSWORD = "Test@2024";
+    private static final String DEFAULT_PASSWORD = "password123"; // default for seeded users
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        LOGGER.info("🚀 Initialisation des données de test...");
-        
-        SessionFactory sessionFactory = null;
+        LOGGER.info("DataInitializer (users-only) starting...");
+
+        // Gate seeding via env var SEED_DB (default: enabled for users if table empty)
+        String seedEnv = System.getenv("SEED_DB");
+        boolean seedEnabled = seedEnv == null || seedEnv.isEmpty() || (
+            "true".equalsIgnoreCase(seedEnv) || "1".equals(seedEnv) || "yes".equalsIgnoreCase(seedEnv)
+        );
+
+        if (!seedEnabled) {
+            LOGGER.info("SEED_DB disabled. Skipping user initialization.");
+            return;
+        }
+
+        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
+        if (sessionFactory == null) {
+            LOGGER.warning("SessionFactory not available; skipping user initialization.");
+            return;
+        }
+
         Session session = null;
-        Transaction transaction = null;
-
+        Transaction tx = null;
         try {
-            LOGGER.info("🔧 Tentative d'obtention de SessionFactory...");
-            sessionFactory = HibernateUtil.getSessionFactory();
-            LOGGER.info("✅ SessionFactory obtenue avec succès");
-            
-            if (sessionFactory == null) {
-                LOGGER.warning("⚠️ SessionFactory n'est pas disponible. L'initialisation des données sera ignorée.");
-                return;
-            }
-            
-            LOGGER.info("🔧 Ouverture de session...");
             session = sessionFactory.openSession();
-            LOGGER.info("✅ Session ouverte avec succès");
-            
-            LOGGER.info("🔧 Début de transaction...");
-            transaction = session.beginTransaction();
-            LOGGER.info("✅ Transaction démarrée");
+            tx = session.beginTransaction();
 
-            // FIXED: Use entity name only, not full package path
-            Long userCount = (Long) session.createQuery("SELECT COUNT(u) FROM User u").uniqueResult();
-            
-            if (userCount > 0) {
-                LOGGER.info("✅ Données déjà initialisées. Aucune action nécessaire.");
-                transaction.commit();
-                return;
+            Long usersCount = session.createQuery("SELECT COUNT(u) FROM com.esalle.entity.User u", Long.class).uniqueResult();
+            LOGGER.info("Existing users count: " + usersCount);
+
+            if (usersCount == null || usersCount == 0) {
+                LOGGER.info("Creating minimal user accounts (admin, coordinateur, professeur, membre_club)");
+                User admin = createUser("admin@ensaa.ma", "Admin", "System", "+212600000001", UserRole.ADMIN, UserStatus.ACTIF);
+                session.persist(admin);
+
+                User coordinateur = createUser("coordinateur@ensaa.ma", "Hassan", "Alami", "+212600000002", UserRole.COORDINATEUR, UserStatus.ACTIF);
+                session.persist(coordinateur);
+
+                User professeur = createUser("professeur@ensaa.ma", "Fatima", "Benani", "+212600000003", UserRole.PROFESSEUR, UserStatus.ACTIF);
+                session.persist(professeur);
+
+                User membreClub = createUser("club@ensaa.ma", "Ahmed", "Tazi", "+212600000004", UserRole.MEMBRE_CLUB, UserStatus.ACTIF);
+                session.persist(membreClub);
+
+                LOGGER.info("Minimal users created");
+            } else {
+                LOGGER.info("Users already present; skipping creation");
             }
 
-            LOGGER.info("📝 Création des utilisateurs de test...");
-
-            // 1️⃣ ADMIN
-            User admin = createUser(
-                "admin@ensaa.ma",
-                "Admin",
-                "Système",
-                "+212600000001",
-                UserRole.ADMIN,
-                UserStatus.ACTIF
-            );
-            session.persist(admin);
-            LOGGER.info("✅ Admin créé: admin@ensaa.ma / Test@2024");
-
-            // 2️⃣ COORDINATEUR
-            User coordinateur = createUser(
-                "coordinateur@ensaa.ma",
-                "Hassan",
-                "Alami",
-                "+212600000002",
-                UserRole.COORDINATEUR,
-                UserStatus.ACTIF
-            );
-            session.persist(coordinateur);
-            LOGGER.info("✅ Coordinateur créé: coordinateur@ensaa.ma / Test@2024");
-
-            // 3️⃣ PROFESSEUR
-            User professeur = createUser(
-                "professeur@ensaa.ma",
-                "Fatima",
-                "Benani",
-                "+212600000003",
-                UserRole.PROFESSEUR,
-                UserStatus.ACTIF
-            );
-            session.persist(professeur);
-            LOGGER.info("✅ Professeur créé: professeur@ensaa.ma / Test@2024");
-
-            // 4️⃣ MEMBRE_CLUB
-            User membreClub = createUser(
-                "club@ensaa.ma",
-                "Ahmed",
-                "Tazi",
-                "+212600000004",
-                UserRole.MEMBRE_CLUB,
-                UserStatus.ACTIF
-            );
-            session.persist(membreClub);
-            LOGGER.info("✅ Membre Club créé: club@ensaa.ma / Test@2024");
-
-            // 📚 Créer des salles
-            LOGGER.info("📝 Création des salles de démonstration...");
-            
-            Salle amphiA = createSalle("Amphithéâtre A", TypeSalle.COURS, 200, 
-                "Projecteur HD\nSystème audio\nTableau interactif\nClimatisation", true);
-            session.persist(amphiA);
-
-            Salle labInfo = createSalle("Laboratoire Informatique 1", TypeSalle.TP, 30, 
-                "30 PC avec double écran\nServeur local\nTableau blanc\nWiFi haut débit", true);
-            session.persist(labInfo);
-
-            Salle salleTD = createSalle("Salle TD B1", TypeSalle.TD, 40, 
-                "Projecteur\nTableau blanc\nPrises électriques\nChaises mobiles", true);
-            session.persist(salleTD);
-
-            Salle labPhysique = createSalle("Laboratoire Physique", TypeSalle.TP, 25, 
-                "Équipements de mesure\nOscilloscopes\nMultimètres\nGénérateurs de signaux", false);
-            session.persist(labPhysique);
-
-            LOGGER.info("✅ 4 salles créées");
-
-            // 🎓 Créer des filières
-            LOGGER.info("📝 Création des filières de démonstration...");
-            
-            Filiere prepa1 = createFiliere("MPSI", Cycle.PREPARATOIRE, 1, 45, 
-                "Mathématiques, Physique et Sciences de l'Ingénieur - 1ère année");
-            session.persist(prepa1);
-
-            Filiere prepa2 = createFiliere("MPSI", Cycle.PREPARATOIRE, 2, 42, 
-                "Mathématiques, Physique et Sciences de l'Ingénieur - 2ème année");
-            session.persist(prepa2);
-
-            Filiere ing1 = createFiliere("Génie Informatique", Cycle.INGENIEUR, 1, 60, 
-                "Formation en développement logiciel et systèmes - DLA1");
-            session.persist(ing1);
-
-            Filiere ing2 = createFiliere("Génie Informatique", Cycle.INGENIEUR, 2, 58, 
-                "Formation en développement logiciel et systèmes - DLA2");
-            session.persist(ing2);
-
-            Filiere ing3 = createFiliere("Génie Informatique", Cycle.INGENIEUR, 3, 55, 
-                "Formation en développement logiciel et systèmes - DLA3");
-            session.persist(ing3);
-
-            LOGGER.info("✅ 5 filières créées");
-
-            transaction.commit();
-            
-            LOGGER.info("✅ ========================================");
-            LOGGER.info("✅ DONNÉES DE TEST CRÉÉES AVEC SUCCÈS !");
-            LOGGER.info("✅ ========================================");
-            LOGGER.info("📧 Comptes de test (mot de passe: Test@2024):");
-            LOGGER.info("   1️⃣  admin@ensaa.ma (ADMIN)");
-            LOGGER.info("   2️⃣  coordinateur@ensaa.ma (COORDINATEUR)");
-            LOGGER.info("   3️⃣  professeur@ensaa.ma (PROFESSEUR)");
-            LOGGER.info("   4️⃣  club@ensaa.ma (MEMBRE_CLUB)");
-            LOGGER.info("✅ ========================================");
-
+            tx.commit();
         } catch (Throwable t) {
-            LOGGER.severe("❌ ERREUR lors de l'initialisation: " + t.getMessage());
-            t.printStackTrace();
-            
-            if (transaction != null && transaction.isActive()) {
-                try {
-                    transaction.rollback();
-                    LOGGER.info("✅ Rollback effectué");
-                } catch (Exception rollbackEx) {
-                    LOGGER.warning("Erreur lors du rollback: " + rollbackEx.getMessage());
-                }
-            }
-            
-            LOGGER.warning("⚠️ L'application continuera à démarrer sans les données initiales.");
+            LOGGER.severe("Error during user initialization: " + t.getMessage());
+            if (tx != null && tx.isActive()) tx.rollback();
         } finally {
-            if (session != null && session.isOpen()) {
-                try {
-                    session.close();
-                    LOGGER.info("✅ Session fermée");
-                } catch (Exception closeEx) {
-                    LOGGER.warning("Erreur lors de la fermeture: " + closeEx.getMessage());
-                }
-            }
-            LOGGER.info("🏁 Fin de l'initialisation des données");
+            if (session != null && session.isOpen()) session.close();
         }
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        LOGGER.info("🔌 Arrêt de l'application...");
         try {
             HibernateUtil.closeSessionFactory();
-            LOGGER.info("✅ SessionFactory fermé avec succès");
         } catch (Exception e) {
-            LOGGER.warning("⚠️ Erreur lors de la fermeture: " + e.getMessage());
+            LOGGER.warning("Error closing SessionFactory: " + e.getMessage());
         }
     }
 
-    private User createUser(String email, String nom, String prenom, String telephone, 
+    private User createUser(String email, String nom, String prenom, String telephone,
                            UserRole role, UserStatus status) {
         User user = new User();
         user.setEmail(email);
-        user.setPassword(BCrypt.hashpw(DEFAULT_PASSWORD, BCrypt.gensalt(12)));
+        user.setPassword(BCrypt.hashpw(DEFAULT_PASSWORD, BCrypt.gensalt(8)));
         user.setNom(nom);
         user.setPrenom(prenom);
         user.setTelephone(telephone);
         user.setRole(role);
         user.setStatut(status);
         return user;
-    }
-
-    private Salle createSalle(String nom, TypeSalle type, int capacite, String equipements, boolean disponible) {
-        Salle salle = new Salle();
-        salle.setNom(nom);
-        salle.setType(type);
-        salle.setCapacite(capacite);
-        salle.setEquipements(equipements);
-        salle.setDisponible(disponible);
-        return salle;
-    }
-
-    private Filiere createFiliere(String nom, Cycle cycle, int annee, int effectif, String description) {
-        Filiere filiere = new Filiere();
-        filiere.setNom(nom);
-        filiere.setCycle(cycle);
-        filiere.setAnnee(annee);
-        filiere.setEffectif(effectif);
-        filiere.setDescription(description);
-        return filiere;
     }
 }

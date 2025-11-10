@@ -28,6 +28,44 @@
         <nav class="flex-1 p-4 space-y-2">
             <c:if test="${not empty sessionScope.user}">
 
+            <!-- Consultation - Tous les rôles -->
+                <c:if test="${not empty sessionScope.user}">
+                    <c:choose>
+                        <c:when test="${sessionScope.user.role.name() == 'ADMIN'}">
+                            <a href="${pageContext.request.contextPath}/consultation/admin" class="block">
+                                <button class="text-gray-700 hover:bg-gray-100 w-full justify-start gap-3 px-3 py-2 rounded-md flex items-center">
+                                    <i class="fas fa-tachometer-alt w-4 h-4"></i>
+                                    <span class="nav-text">Dashboard</span>
+                                </button>
+                            </a>
+                        </c:when>
+                        <c:when test="${sessionScope.user.role.name() == 'COORDINATEUR'}">
+                            <a href="${pageContext.request.contextPath}/consultation/coordinateur" class="block">
+                                <button class="text-gray-700 hover:bg-gray-100 w-full justify-start gap-3 px-3 py-2 rounded-md flex items-center">
+                                    <i class="fas fa-tachometer-alt w-4 h-4"></i>
+                                    <span class="nav-text">Dashboard</span>
+                                </button>
+                            </a>
+                        </c:when>
+                        <c:when test="${sessionScope.user.role.name() == 'PROFESSEUR'}">
+                            <a href="${pageContext.request.contextPath}/consultation/professeur" class="block">
+                                <button class="text-gray-700 hover:bg-gray-100 w-full justify-start gap-3 px-3 py-2 rounded-md flex items-center">
+                                    <i class="fas fa-tachometer-alt w-4 h-4"></i>
+                                    <span class="nav-text">Mon Dashboard</span>
+                                </button>
+                            </a>
+                        </c:when>
+                        <c:when test="${sessionScope.user.role.name() == 'MEMBRE_CLUB'}">
+                            <a href="${pageContext.request.contextPath}/consultation/club" class="block">
+                                <button class="text-gray-700 hover:bg-gray-100 w-full justify-start gap-3 px-3 py-2 rounded-md flex items-center">
+                                    <i class="fas fa-tachometer-alt w-4 h-4"></i>
+                                    <span class="nav-text">Mon Dashboard</span>
+                                </button>
+                            </a>
+                        </c:when>
+                    </c:choose>
+                </c:if>
+
                 <!-- Salles -->
                 <a href="${pageContext.request.contextPath}/salles/list" class="block">
                     <button class="text-gray-700 hover:bg-gray-100 w-full justify-start gap-3 px-3 py-2 rounded-md flex items-center">
@@ -116,43 +154,7 @@
                     </c:when>
                 </c:choose>
 
-                <!-- Consultation - Tous les rôles -->
-                <c:if test="${not empty sessionScope.user}">
-                    <c:choose>
-                        <c:when test="${sessionScope.user.role.name() == 'ADMIN'}">
-                            <a href="${pageContext.request.contextPath}/consultation/admin" class="block">
-                                <button class="text-gray-700 hover:bg-gray-100 w-full justify-start gap-3 px-3 py-2 rounded-md flex items-center">
-                                    <i class="fas fa-tachometer-alt w-4 h-4"></i>
-                                    <span class="nav-text">Dashboard</span>
-                                </button>
-                            </a>
-                        </c:when>
-                        <c:when test="${sessionScope.user.role.name() == 'COORDINATEUR'}">
-                            <a href="${pageContext.request.contextPath}/consultation/coordinateur" class="block">
-                                <button class="text-gray-700 hover:bg-gray-100 w-full justify-start gap-3 px-3 py-2 rounded-md flex items-center">
-                                    <i class="fas fa-tachometer-alt w-4 h-4"></i>
-                                    <span class="nav-text">Dashboard</span>
-                                </button>
-                            </a>
-                        </c:when>
-                        <c:when test="${sessionScope.user.role.name() == 'PROFESSEUR'}">
-                            <a href="${pageContext.request.contextPath}/consultation/professeur" class="block">
-                                <button class="text-gray-700 hover:bg-gray-100 w-full justify-start gap-3 px-3 py-2 rounded-md flex items-center">
-                                    <i class="fas fa-tachometer-alt w-4 h-4"></i>
-                                    <span class="nav-text">Mon Dashboard</span>
-                                </button>
-                            </a>
-                        </c:when>
-                        <c:when test="${sessionScope.user.role.name() == 'MEMBRE_CLUB'}">
-                            <a href="${pageContext.request.contextPath}/consultation/club" class="block">
-                                <button class="text-gray-700 hover:bg-gray-100 w-full justify-start gap-3 px-3 py-2 rounded-md flex items-center">
-                                    <i class="fas fa-tachometer-alt w-4 h-4"></i>
-                                    <span class="nav-text">Mon Dashboard</span>
-                                </button>
-                            </a>
-                        </c:when>
-                    </c:choose>
-                </c:if>
+                
             </c:if>
         </nav>
 

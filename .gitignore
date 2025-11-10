@@ -77,4 +77,7 @@ application-local.properties
 *.odt
 *.odp
 *.ods
+
+# hibernate
+hibernate.cfg.xml
 *.tex
