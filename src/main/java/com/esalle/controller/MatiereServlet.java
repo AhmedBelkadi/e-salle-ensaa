@@ -142,10 +142,13 @@ public class MatiereServlet extends HttpServlet {
         String filiereIdStr = request.getParameter("filiereId");
         String search = request.getParameter("search");
         
+        // Récupérer les matières selon le rôle de l'utilisateur
         List<Matiere> matieres;
+
+        // Récupérer les filières selon le rôle de l'utilisateur
         List<Filiere> filieres;
         
-        // Filtrer selon le rôle
+        // Filtrer selon le rôle COORDINATEUR
         if (currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR) {
             // COORDINATEUR: Afficher seulement les matières de ses filières
             List<Filiere> coordinateurFilieres = filiereService.getFilieresByCoordinateur(currentUser.getId());
@@ -163,6 +166,7 @@ public class MatiereServlet extends HttpServlet {
                     Long filiereId = Long.parseLong(filiereIdStr);
                     // Vérifier que cette filière appartient au coordinateur
                     if (filiereIds.contains(filiereId)) {
+                        // Récupérer les matières de cette filière
                         matieres = matiereService.getMatieresByFiliere(filiereId);
                     } else {
                         matieres = java.util.Collections.emptyList();
@@ -179,7 +183,10 @@ public class MatiereServlet extends HttpServlet {
                     matieres = matiereService.getMatieresByFilieres(filiereIds);
                 }
             }
-        } else if (currentUser != null && currentUser.getRole() == User.UserRole.PROFESSEUR) {
+        } 
+        
+        // Filtrer selon le rôle PROFESSEUR
+        else if (currentUser != null && currentUser.getRole() == User.UserRole.PROFESSEUR) {
             // PROFESSEUR: Afficher seulement les matières qui lui sont assignées
             filieres = filiereService.getAllFilieres(); // Pour le filtre, mais les matières seront filtrées
             
@@ -201,7 +208,10 @@ public class MatiereServlet extends HttpServlet {
                 // Toutes les matières assignées au professeur
                 matieres = matiereService.getMatieresByProfesseur(currentUser.getId());
             }
-        } else {
+        } 
+        
+        // ADMIN et autres: Afficher toutes les matières
+        else {
             // ADMIN et autres: Afficher toutes les matières
             filieres = filiereService.getAllFilieres();
             

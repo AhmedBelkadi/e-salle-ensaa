@@ -10,7 +10,6 @@ import com.esalle.repository.UserRepositoryImpl;
 import com.esalle.repository.FiliereRepository;
 import com.esalle.repository.FiliereRepositoryImpl;
 import com.esalle.exception.BusinessException;
-import com.esalle.exception.NotFoundException;
 
 import java.util.List;
 import java.util.Optional;
