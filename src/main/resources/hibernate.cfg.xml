@@ -4,12 +4,15 @@
         "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
     <session-factory>
-            <property name="hibernate.connection.driver_class">${DB_DRIVER}</property>
-                <property name="hibernate.connection.url">${DB_URL}</property>
-                <property name="hibernate.connection.username">${DB_USERNAME}</property>
-            <property name="hibernate.connection.password">${DB_PASSWORD}</property>
+        <!-- Database connection settings -->
+        <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
+        <property name="hibernate.connection.url">jdbc:postgresql://turntable.proxy.rlwy.net:13477/railway</property>
+        <property name="hibernate.connection.username">postgres</property>
+        <property name="hibernate.connection.password">yTyljehPwNOanMKFsPkjBDHfwotqHnxO</property>
 
+        <!-- Optional but recommended if Railway requires SSL -->
         <property name="hibernate.connection.sslmode">require</property>
+
         <!-- JDBC connection pool settings -->
         <property name="hibernate.connection.pool_size">10</property>
 
