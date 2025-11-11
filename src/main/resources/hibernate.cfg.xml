@@ -9,6 +9,7 @@
                 <property name="hibernate.connection.username">${DB_USERNAME}</property>
             <property name="hibernate.connection.password">${DB_PASSWORD}</property>
 
+        <property name="hibernate.connection.sslmode">require</property>
         <!-- JDBC connection pool settings -->
         <property name="hibernate.connection.pool_size">10</property>
 
