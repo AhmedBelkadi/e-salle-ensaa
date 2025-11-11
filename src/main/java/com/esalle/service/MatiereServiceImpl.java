@@ -39,12 +39,12 @@ public class MatiereServiceImpl implements MatiereService {
                 .orElseThrow(() -> new BusinessException("La filière spécifiée n'existe pas."));
         matiere.setFiliereNom(filiere.getNom());
 
-        // Vérifier que le professeur existe et est bien un PROFESSEUR
+        // Vérifier que le professeur existe et est bien un PROFESSEUR ou COORDINATEUR
         User professeur = userRepository.findById(matiere.getProfesseurId())
                 .orElseThrow(() -> new BusinessException("Le professeur spécifié n'existe pas."));
         
-        if (professeur.getRole() != User.UserRole.PROFESSEUR) {
-            throw new BusinessException("L'utilisateur sélectionné n'est pas un professeur.");
+        if (professeur.getRole() != User.UserRole.PROFESSEUR && professeur.getRole() != User.UserRole.COORDINATEUR) {
+            throw new BusinessException("L'utilisateur sélectionné n'est pas un professeur ou coordinateur.");
         }
         matiere.setProfesseurNom(professeur.getNom() + " " + professeur.getPrenom());
 

@@ -5,16 +5,23 @@
     <jsp:param name="title" value="Emploi du Temps - E-Salle ENSAA"/>
 </jsp:include>
 
-<div class="flex-1 p-6">
-    <div class="space-y-6 max-w-7xl mx-auto">
+<div class="p-6">
+    <div class="space-y-6">
         <!-- Header Section -->
         <div class="flex justify-between items-center">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Emploi du Temps</h1>
                 <p class="text-gray-600 mt-2">
                     <c:choose>
-                        <c:when test="${isProfessor}">
-                            Mes horaires de cours
+                        <c:when test="${isTeachingView}">
+                            <c:choose>
+                                <c:when test="${isProfessor}">
+                                    Mes horaires de cours
+                                </c:when>
+                                <c:when test="${isCoordinateur}">
+                                    Mes cours en tant que professeur
+                                </c:when>
+                            </c:choose>
                         </c:when>
                         <c:otherwise>
                             Créer et gérer les horaires des classes par filière
@@ -22,16 +29,36 @@
                     </c:choose>
                 </p>
             </div>
-            <c:if test="${canEdit}">
-                <button id="addScheduleBtn" class="gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center">
-                    <i class="fas fa-plus w-4 h-4"></i>
-                    Ajouter Séance
-                </button>
-            </c:if>
+            <div class="flex gap-2 items-center">
+                <c:if test="${isCoordinateur}">
+                    <c:choose>
+                        <c:when test="${viewMode == 'teach'}">
+                            <a href="${pageContext.request.contextPath}/emploi/list?viewMode=manage${not empty selectedFiliereId ? '&filiereId='.concat(selectedFiliereId) : ''}${not empty selectedAnnee ? '&annee='.concat(selectedAnnee) : '&annee=1'}" 
+                               class="gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md flex items-center">
+                                <i class="fas fa-cog w-4 h-4"></i>
+                                Mode Gestion
+                            </a>
+                        </c:when>
+                        <c:otherwise>
+                            <a href="${pageContext.request.contextPath}/emploi/list?viewMode=teach" 
+                               class="gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center">
+                                <i class="fas fa-chalkboard-teacher w-4 h-4"></i>
+                                Mes Cours
+                            </a>
+                        </c:otherwise>
+                    </c:choose>
+                </c:if>
+                <c:if test="${canEdit}">
+                    <button id="addScheduleBtn" class="gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center">
+                        <i class="fas fa-plus w-4 h-4"></i>
+                        Ajouter Séance
+                    </button>
+                </c:if>
+            </div>
         </div>
 
-        <!-- Message si coordinateur sans filières -->
-        <c:if test="${isCoordinateur && (empty filieres || filieres.size() == 0)}">
+        <!-- Message si coordinateur sans filières (seulement en mode gestion) -->
+        <c:if test="${isCoordinateur && !isTeachingView && (empty filieres || filieres.size() == 0)}">
             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-exclamation-triangle text-yellow-600"></i>
@@ -45,59 +72,15 @@
             </div>
         </c:if>
 
-        <!-- Navigation par onglets (Cycles et Années) -->
-        <c:if test="${not empty emploisByCycleAndAnnee}">
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <!-- Barre d'onglets -->
-                <div class="border-b border-gray-200 bg-gray-50">
-                    <nav class="flex flex-wrap gap-2 px-4" aria-label="Tabs">
-                        <!-- Cycle Préparatoire -->
-                        <c:set var="preparatoireMap" value="${emploisByCycleAndAnnee['PREPARATOIRE']}" />
-                        <c:if test="${not empty preparatoireMap}">
-                            <c:forEach var="anneeEntry" items="${preparatoireMap}">
-                                <c:set var="annee" value="${anneeEntry.key}" />
-                                <c:set var="anneeLabel" value="${annee == 1 ? '1ère année préparatoire' : '2ème année préparatoire'}" />
-                                <c:set var="preparatoireUrl" value="${pageContext.request.contextPath}/emploi/list?cycle=PREPARATOIRE&annee=${annee}" />
-                                <c:if test="${not empty selectedFiliereId}">
-                                    <c:set var="preparatoireUrl" value="${preparatoireUrl}&filiereId=${selectedFiliereId}" />
-                                </c:if>
-                                <a href="${preparatoireUrl}" 
-                                   class="px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-                                   ${selectedCycle == 'PREPARATOIRE' && (selectedAnnee == null || selectedAnnee == '' || selectedAnnee == annee) ? 'border-blue-500 text-blue-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}">
-                                    ${anneeLabel}
-                                </a>
-                            </c:forEach>
-                        </c:if>
-                        
-                        <!-- Cycle Ingénieur -->
-                        <c:set var="ingenieurMap" value="${emploisByCycleAndAnnee['INGENIEUR']}" />
-                        <c:if test="${not empty ingenieurMap}">
-                            <c:forEach var="anneeEntry" items="${ingenieurMap}">
-                                <c:set var="annee" value="${anneeEntry.key}" />
-                                <c:set var="anneeLabel" value="${annee == 1 ? '1ère année ingénieur' : annee == 2 ? '2ème année ingénieur' : '3ème année ingénieur'}" />
-                                <c:set var="ingenieurUrl" value="${pageContext.request.contextPath}/emploi/list?cycle=INGENIEUR&annee=${annee}" />
-                                <c:if test="${not empty selectedFiliereId}">
-                                    <c:set var="ingenieurUrl" value="${ingenieurUrl}&filiereId=${selectedFiliereId}" />
-                                </c:if>
-                                <a href="${ingenieurUrl}" 
-                                   class="px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-                                   ${selectedCycle == 'INGENIEUR' && (selectedAnnee == null || selectedAnnee == '' || selectedAnnee == annee) ? 'border-blue-500 text-blue-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}">
-                                    ${anneeLabel}
-                                </a>
-                            </c:forEach>
-                        </c:if>
-                    </nav>
-                </div>
-            </div>
-        </c:if>
-
-        <!-- Filters (only for admin/coordinateur) -->
-        <c:if test="${canEdit || isAdmin}">
+        <!-- Filters (only for admin/coordinateur in manage mode, NOT for professeur or teaching view) -->
+        <c:if test="${(canEdit || isAdmin) && !isProfessor && !isTeachingView}">
             <div class="bg-white flex flex-col gap-6 rounded-xl border border-gray-200 py-6 shadow-sm">
                 <div class="px-6 pt-0">
                     <form method="get" action="${pageContext.request.contextPath}/emploi/list" class="flex gap-4 flex-col md:flex-row">
+                        <input type="hidden" name="viewMode" value="manage">
                         <c:if test="${isAdmin}">
                             <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Filière</label>
                                 <select name="filiereId" class="rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="">Toutes les filières</option>
                                     <c:forEach var="filiere" items="${filieres}">
@@ -110,10 +93,10 @@
                         </c:if>
                         <c:if test="${isCoordinateur && not empty filieres}">
                             <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Filière</label>
                                 <select name="filiereId" class="rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    <option value="">Toutes mes filières</option>
-                                    <c:forEach var="filiere" items="${filieres}">
-                                        <option value="${filiere.id}" ${selectedFiliereId == filiere.id ? 'selected' : ''}>
+                                    <c:forEach var="filiere" items="${filieres}" varStatus="status">
+                                        <option value="${filiere.id}" ${(selectedFiliereId == filiere.id || (empty selectedFiliereId && status.first)) ? 'selected' : ''}>
                                             ${filiere.nom} - ${filiere.cycle} ${filiere.annee}
                                         </option>
                                     </c:forEach>
@@ -121,131 +104,155 @@
                             </div>
                         </c:if>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Groupe</label>
                             <select name="groupe" class="rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="">Tous les groupes</option>
                                 <option value="1" ${selectedGroupe == '1' ? 'selected' : ''}>Groupe 1</option>
                                 <option value="2" ${selectedGroupe == '2' ? 'selected' : ''}>Groupe 2</option>
                             </select>
                         </div>
-                        <button type="submit" class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
-                            <i class="fas fa-filter"></i> Filtrer
-                        </button>
+                        <div class="flex items-end">
+                            <button type="submit" class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
+                                <i class="fas fa-filter"></i> Filtrer
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
         </c:if>
 
-        <!-- Add Schedule Form (Initially Hidden) -->
+        <!-- Modal for Adding Schedule -->
         <c:if test="${canEdit}">
-            <div id="scheduleForm" class="bg-white border border-gray-200 rounded-lg shadow-sm hidden">
-                <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-xl font-semibold text-gray-900">Ajouter une Nouvelle Séance</h2>
-                    <p id="selectedInfo" class="text-gray-600 mt-1"></p>
-                </div>
-                <div class="p-6">
-                    <form method="POST" action="${pageContext.request.contextPath}/emploi/save" class="space-y-4">
-                        <input type="hidden" name="filiereId" id="formFiliereId" required>
-                        <input type="hidden" name="annee" id="formAnnee" value="1">
-                        <input type="hidden" name="jourSemaine" id="formJourSemaine" required>
-                        <input type="hidden" name="heureDebut" id="formHeureDebut" required>
-                        <input type="hidden" name="heureFin" id="formHeureFin" required>
-                        
+            <!-- Modal Overlay -->
+            <div id="scheduleModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 flex items-center justify-center">
+                <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                    <!-- Modal Header -->
+                    <div class="p-6 border-b border-gray-200 flex items-center justify-between">
                         <div>
-                            <label class="text-gray-700 font-medium block mb-2">Filière <span class="text-red-500">*</span></label>
-                            <select name="filiereId" id="branchSelect" required
-                                    class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                <option value="">Sélectionner une filière</option>
-                                <c:forEach var="filiere" items="${filieres}">
-                                    <option value="${filiere.id}">${filiere.nom} - ${filiere.cycle} ${filiere.annee}</option>
-                                </c:forEach>
-                            </select>
+                            <h2 class="text-xl font-semibold text-gray-900">Ajouter une Nouvelle Séance</h2>
+                            <p id="selectedInfo" class="text-gray-600 mt-1 text-sm"></p>
                         </div>
-                        
-                        <div id="dayTimeSelectors" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button type="button" id="closeModalBtn" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <!-- Modal Body -->
+                    <div class="p-6">
+                        <form method="POST" action="${pageContext.request.contextPath}/emploi/save" class="space-y-4">
+                            <input type="hidden" name="filiereId" id="formFiliereId" required 
+                                   value="${isCoordinateur && not empty filieres ? (not empty selectedFiliereId ? selectedFiliereId : filieres[0].id) : ''}">
+                            <input type="hidden" name="annee" id="formAnnee" 
+                                   value="${isCoordinateur && not empty filieres ? (not empty selectedFiliereId && not empty selectedAnnee ? selectedAnnee : filieres[0].annee) : '1'}">
+                            <input type="hidden" name="jourSemaine" id="formJourSemaine" required>
+                            <input type="hidden" name="heureDebut" id="formHeureDebut" required>
+                            <input type="hidden" name="heureFin" id="formHeureFin" required>
+                            
+                            <!-- Filière selector (only for admin) -->
+                            <c:if test="${isAdmin}">
+                                <div>
+                                    <label class="text-gray-700 font-medium block mb-2">Filière <span class="text-red-500">*</span></label>
+                                    <select name="filiereId" id="branchSelect" required onchange="filterMatieresByFiliere()"
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                        <option value="">Sélectionner une filière</option>
+                                        <c:forEach var="filiere" items="${filieres}">
+                                            <option value="${filiere.id}" data-annee="${filiere.annee}">${filiere.nom} - ${filiere.cycle} ${filiere.annee}</option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
+                            </c:if>
+                            
+                            <!-- Day and Time (hidden when clicking on slot) -->
+                            <div id="dayTimeSelectors" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-gray-700 font-medium block mb-2">Jour <span class="text-red-500">*</span></label>
+                                    <select id="daySelect" required
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                        <option value="">Sélectionner un jour</option>
+                                        <option value="LUNDI">Lundi</option>
+                                        <option value="MARDI">Mardi</option>
+                                        <option value="MERCREDI">Mercredi</option>
+                                        <option value="JEUDI">Jeudi</option>
+                                        <option value="VENDREDI">Vendredi</option>
+                                        <option value="SAMEDI">Samedi</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-gray-700 font-medium block mb-2">Créneau Horaire <span class="text-red-500">*</span></label>
+                                    <select id="timeSlotSelect" required
+                                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                        <option value="">Sélectionner un créneau</option>
+                                        <option value="08:30-10:30">08:30-10:30</option>
+                                        <option value="10:30-12:30">10:30-12:30</option>
+                                        <option value="14:30-16:30">14:30-16:30</option>
+                                        <option value="16:30-18:30">16:30-18:30</option>
+                                        <option value="18:30-20:30">18:30-20:30</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
                             <div>
-                                <label class="text-gray-700 font-medium block mb-2">Jour <span class="text-red-500">*</span></label>
-                                <select id="daySelect" required
+                                <label class="text-gray-700 font-medium block mb-2">Matière <span class="text-red-500">*</span></label>
+                                <select name="matiereId" id="subjectSelect" required onchange="updateProfesseur()"
                                         class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                    <option value="">Sélectionner un jour</option>
-                                    <option value="LUNDI">Lundi</option>
-                                    <option value="MARDI">Mardi</option>
-                                    <option value="MERCREDI">Mercredi</option>
-                                    <option value="JEUDI">Jeudi</option>
-                                    <option value="VENDREDI">Vendredi</option>
-                                    <option value="SAMEDI">Samedi</option>
+                                    <option value="">Sélectionner une matière</option>
+                                    <c:forEach var="matiere" items="${matieres}">
+                                        <option value="${matiere.id}" 
+                                                data-filiere="${matiere.filiereId}" 
+                                                data-prof="${matiere.professeurId}"
+                                                data-prof-nom="${matiere.professeurNom}">${matiere.nom}</option>
+                                    </c:forEach>
                                 </select>
                             </div>
+                            
                             <div>
-                                <label class="text-gray-700 font-medium block mb-2">Créneau Horaire <span class="text-red-500">*</span></label>
-                                <select id="timeSlotSelect" required
+                                <label class="text-gray-700 font-medium block mb-2">Professeur <span class="text-red-500">*</span></label>
+                                <input type="hidden" name="professeurId" id="professorId" required>
+                                <input type="text" id="professorNom" readonly
+                                       class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900"
+                                       placeholder="Sélectionnez une matière pour voir le professeur">
+                            </div>
+                            
+                            <div>
+                                <label class="text-gray-700 font-medium block mb-2">Salle <span class="text-red-500">*</span></label>
+                                <select name="salleId" id="salleSelect" required
                                         class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                    <option value="">Sélectionner un créneau</option>
-                                    <option value="08:30-10:30">08:30-10:30</option>
-                                    <option value="10:30-12:30">10:30-12:30</option>
-                                    <option value="14:30-16:30">14:30-16:30</option>
-                                    <option value="16:30-18:30">16:30-18:30</option>
-                                    <option value="18:30-20:30">18:30-20:30</option>
+                                    <option value="">Sélectionner une salle</option>
+                                    <c:forEach var="salle" items="${salles}">
+                                        <option value="${salle.id}">${salle.nom} (${salle.type})</option>
+                                    </c:forEach>
                                 </select>
                             </div>
-                        </div>
-                        
-                        <div>
-                            <label class="text-gray-700 font-medium block mb-2">Matière <span class="text-red-500">*</span></label>
-                            <select name="matiereId" id="subjectSelect" required onchange="updateProfesseur()"
-                                    class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                <option value="">Sélectionner une matière</option>
-                                <c:forEach var="matiere" items="${matieres}">
-                                    <option value="${matiere.id}" data-filiere="${matiere.filiereId}" data-prof="${matiere.professeurId}">${matiere.nom}</option>
-                                </c:forEach>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="text-gray-700 font-medium block mb-2">Professeur <span class="text-red-500">*</span></label>
-                            <input type="number" name="professeurId" id="professorId" required readonly
-                                   class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900">
-                        </div>
-                        
-                        <div>
-                            <label class="text-gray-700 font-medium block mb-2">Salle <span class="text-red-500">*</span></label>
-                            <select name="salleId" id="salleSelect" required
-                                    class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                <option value="">Sélectionner une salle</option>
-                                <c:forEach var="salle" items="${salles}">
-                                    <option value="${salle.id}">${salle.nom} (${salle.type})</option>
-                                </c:forEach>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="text-gray-700 font-medium block mb-2">Type de Séance <span class="text-red-500">*</span></label>
-                            <select name="typeSeance" id="typeSeanceSelect" required
-                                    class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                <option value="COURS">Cours</option>
-                                <option value="TD">TD</option>
-                                <option value="TP">TP</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="text-gray-700 font-medium block mb-2">Groupe (optionnel)</label>
-                            <select name="groupe" id="groupeSelect"
-                                    class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                <option value="">Tous les groupes</option>
-                                <option value="1">Groupe 1</option>
-                                <option value="2">Groupe 2</option>
-                            </select>
-                        </div>
-                        
-                        <div class="flex gap-2">
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
-                                Ajouter Séance
-                            </button>
-                            <button type="button" id="cancelFormBtn" class="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md">
-                                Annuler
-                            </button>
-                        </div>
-                    </form>
+                            
+                            <div>
+                                <label class="text-gray-700 font-medium block mb-2">Type de Séance <span class="text-red-500">*</span></label>
+                                <select name="typeSeance" id="typeSeanceSelect" required
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                    <option value="COURS">Cours</option>
+                                    <option value="TD">TD</option>
+                                    <option value="TP">TP</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="text-gray-700 font-medium block mb-2">Groupe (optionnel)</label>
+                                <select name="groupe" id="groupeSelect"
+                                        class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded text-gray-900 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                                    <option value="">Tous les groupes</option>
+                                    <option value="1">Groupe 1</option>
+                                    <option value="2">Groupe 2</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex gap-2 justify-end pt-4 border-t border-gray-200">
+                                <button type="button" id="cancelFormBtn" class="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md">
+                                    Annuler
+                                </button>
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                                    Ajouter Séance
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </c:if>
@@ -255,36 +262,38 @@
             <div class="p-6 border-b border-gray-200">
                 <h2 class="text-xl font-semibold text-gray-900">
                     <c:choose>
-                        <c:when test="${selectedCycle == 'PREPARATOIRE' && selectedAnnee == '1'}">
-                            Emploi du Temps - 1ère année préparatoire
-                        </c:when>
-                        <c:when test="${selectedCycle == 'PREPARATOIRE' && selectedAnnee == '2'}">
-                            Emploi du Temps - 2ème année préparatoire
-                        </c:when>
-                        <c:when test="${selectedCycle == 'INGENIEUR' && selectedAnnee == '1'}">
-                            Emploi du Temps - 1ère année ingénieur
-                        </c:when>
-                        <c:when test="${selectedCycle == 'INGENIEUR' && selectedAnnee == '2'}">
-                            Emploi du Temps - 2ème année ingénieur
-                        </c:when>
-                        <c:when test="${selectedCycle == 'INGENIEUR' && selectedAnnee == '3'}">
-                            Emploi du Temps - 3ème année ingénieur
+                        <c:when test="${isTeachingView}">
+                            <c:choose>
+                                <c:when test="${isProfessor}">
+                                    Mon Emploi du Temps - Professeur
+                                </c:when>
+                                <c:when test="${isCoordinateur}">
+                                    Mon Emploi du Temps - Enseignement
+                                </c:when>
+                            </c:choose>
                         </c:when>
                         <c:otherwise>
-                            Emploi du Temps
+                            Emploi du Temps - ${not empty selectedAnnee ? selectedAnnee.concat('ère année') : '1ère année'}
+                            <c:if test="${not empty selectedFiliereId}">
+                                <c:forEach var="filiere" items="${filieres}">
+                                    <c:if test="${filiere.id == selectedFiliereId}">
+                                        - ${filiere.nom}
+                                    </c:if>
+                                </c:forEach>
+                            </c:if>
                         </c:otherwise>
                     </c:choose>
                 </h2>
                 <p class="text-gray-600">
                     <c:choose>
+                        <c:when test="${isTeachingView}">
+                            Vos cours en tant que professeur
+                        </c:when>
                         <c:when test="${canEdit}">
                             Cliquez sur une cellule vide pour ajouter une matière
                         </c:when>
-                        <c:when test="${isProfessor}">
-                            Vos horaires de cours
-                        </c:when>
                         <c:otherwise>
-                            Sélectionnez un onglet ci-dessus pour voir l'emploi du temps d'une année spécifique
+                            Emploi du temps filtré par année ${not empty selectedAnnee ? selectedAnnee : '1'}
                         </c:otherwise>
                     </c:choose>
                 </p>
@@ -782,9 +791,35 @@
 
 <c:if test="${canEdit}">
 <script>
+// Variables JSP pour JavaScript
+var isCoordinateur = <c:choose><c:when test="${isCoordinateur}">true</c:when><c:otherwise>false</c:otherwise></c:choose>;
+var isAdmin = <c:choose><c:when test="${isAdmin}">true</c:when><c:otherwise>false</c:otherwise></c:choose>;
+var coordinateurFiliereId = <c:choose><c:when test="${isCoordinateur && not empty selectedFiliereId}">'${selectedFiliereId}'</c:when><c:when test="${isCoordinateur && not empty filieres}">'${filieres[0].id}'</c:when><c:otherwise>null</c:otherwise></c:choose>;
+var coordinateurAnnee = <c:choose><c:when test="${isCoordinateur && not empty selectedAnnee}">'${selectedAnnee}'</c:when><c:when test="${isCoordinateur && not empty filieres}">'${filieres[0].annee}'</c:when><c:otherwise>null</c:otherwise></c:choose>;
+var selectedFiliereId = <c:choose><c:when test="${not empty selectedFiliereId}">'${selectedFiliereId}'</c:when><c:otherwise>null</c:otherwise></c:choose>;
+
+// Store all matieres for filtering
+var allMatieres = [];
 document.addEventListener('DOMContentLoaded', function() {
+    // Store all matiere options for filtering
+    const subjectSelect = document.getElementById('subjectSelect');
+    if (subjectSelect) {
+        Array.from(subjectSelect.options).forEach(option => {
+            if (option.value) {
+                allMatieres.push({
+                    value: option.value,
+                    text: option.text,
+                    filiereId: option.getAttribute('data-filiere'),
+                    profId: option.getAttribute('data-prof'),
+                    profNom: option.getAttribute('data-prof-nom')
+                });
+            }
+        });
+    }
+    
     const addScheduleBtn = document.getElementById('addScheduleBtn');
-    const scheduleForm = document.getElementById('scheduleForm');
+    const scheduleModal = document.getElementById('scheduleModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
     const cancelFormBtn = document.getElementById('cancelFormBtn');
     const tableCells = document.querySelectorAll('.timetable-cell');
     const selectedInfo = document.getElementById('selectedInfo');
@@ -796,7 +831,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const formHeureFin = document.getElementById('formHeureFin');
     const formFiliereId = document.getElementById('formFiliereId');
     const branchSelect = document.getElementById('branchSelect');
-    const subjectSelect = document.getElementById('subjectSelect');
     const typeSeanceSelect = document.getElementById('typeSeanceSelect');
     const salleSelect = document.getElementById('salleSelect');
     
@@ -809,23 +843,58 @@ document.addEventListener('DOMContentLoaded', function() {
         'SAMEDI': 'Samedi'
     };
     
-    // Show/hide form when Add Schedule button is clicked
+    // Function to open modal
+    function openModal() {
+        if (scheduleModal) {
+            scheduleModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent body scroll
+        }
+    }
+    
+    // Function to close modal
+    function closeModal() {
+        if (scheduleModal) {
+            scheduleModal.classList.add('hidden');
+            document.body.style.overflow = ''; // Restore body scroll
+        }
+        resetForm();
+    }
+    
+    // Show modal when Add Schedule button is clicked
     if (addScheduleBtn) {
         addScheduleBtn.addEventListener('click', function() {
-            scheduleForm.classList.toggle('hidden');
             selectedInfo.textContent = '';
             if (dayTimeSelectors) dayTimeSelectors.classList.remove('hidden');
             resetForm();
+            openModal();
         });
     }
     
-    // Hide form when Cancel button is clicked
+    // Close modal when close button is clicked
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModal);
+    }
+    
+    // Close modal when cancel button is clicked
     if (cancelFormBtn) {
-        cancelFormBtn.addEventListener('click', function() {
-            scheduleForm.classList.add('hidden');
-            resetForm();
+        cancelFormBtn.addEventListener('click', closeModal);
+    }
+    
+    // Close modal when clicking outside
+    if (scheduleModal) {
+        scheduleModal.addEventListener('click', function(e) {
+            if (e.target === scheduleModal) {
+                closeModal();
+            }
         });
     }
+    
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && scheduleModal && !scheduleModal.classList.contains('hidden')) {
+            closeModal();
+        }
+    });
     
     // Handle table cell clicks
     if (tableCells) {
@@ -841,22 +910,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const heureDebut = this.getAttribute('data-heure-debut');
                 const heureFin = this.getAttribute('data-heure-fin');
                 
-                // Only show form if cell is empty (has plus icon)
+                // Only show modal if cell is empty (has plus icon)
                 if (this.querySelector('.fa-plus')) {
-                    scheduleForm.classList.remove('hidden');
                     selectedInfo.textContent = 'Sélectionné: ' + dayNames[day] + ' de ' + timeSlot;
                     if (dayTimeSelectors) dayTimeSelectors.classList.add('hidden');
                     
                     // Set the selected day and time in the form
-                    if (daySelect) {
-                        daySelect.value = day;
-                    }
                     if (formJourSemaine) {
                         formJourSemaine.value = day;
-                    }
-                    
-                    if (timeSlotSelect) {
-                        timeSlotSelect.value = timeSlot;
                     }
                     if (formHeureDebut) {
                         formHeureDebut.value = heureDebut;
@@ -864,6 +925,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (formHeureFin) {
                         formHeureFin.value = heureFin;
                     }
+                    
+                    openModal();
                 }
             });
         });
@@ -884,18 +947,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Update filiere when branch is selected
+    // Pour les coordinateurs, initialiser la filière et l'année automatiquement
+    if (isCoordinateur && coordinateurFiliereId && formFiliereId) {
+        formFiliereId.value = coordinateurFiliereId;
+    }
+    if (isCoordinateur && coordinateurAnnee && formAnnee) {
+        formAnnee.value = coordinateurAnnee;
+    }
+    
+    // Filter matieres when filiere is selected (for admin)
     if (branchSelect) {
         branchSelect.addEventListener('change', function() {
-            if (formFiliereId) formFiliereId.value = this.value;
-            // Filter matières by filière
-            if (subjectSelect) {
-                const selectedFiliere = this.value;
-                Array.from(subjectSelect.options).forEach(option => {
-                    if (option.value === '') return;
-                    const optionFiliere = option.getAttribute('data-filiere');
-                    option.style.display = (!selectedFiliere || optionFiliere === selectedFiliere) ? 'block' : 'none';
-                });
+            const selectedFiliereId = this.value;
+            if (selectedFiliereId && formFiliereId) {
+                formFiliereId.value = selectedFiliereId;
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption && formAnnee) {
+                    const annee = selectedOption.getAttribute('data-annee');
+                    if (annee) {
+                        formAnnee.value = annee;
+                    }
+                }
+            }
+            filterMatieresByFiliere();
+        });
+    }
+    
+    // Mettre à jour la filière quand une matière est sélectionnée (pour admin uniquement, si filiere not selected)
+    if (isAdmin && subjectSelect && !branchSelect) {
+        subjectSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption && selectedOption.value && formFiliereId) {
+                const matiereFiliereId = selectedOption.getAttribute('data-filiere');
+                if (matiereFiliereId) {
+                    formFiliereId.value = matiereFiliereId;
+                }
             }
         });
     }
@@ -917,16 +1003,44 @@ document.addEventListener('DOMContentLoaded', function() {
     function resetForm() {
         if (daySelect) daySelect.value = '';
         if (timeSlotSelect) timeSlotSelect.value = '';
-        if (subjectSelect) subjectSelect.value = '';
+        if (subjectSelect) {
+            subjectSelect.value = '';
+            // Reset matieres dropdown to show all (for coordinateurs, they're already filtered)
+            if (isCoordinateur) {
+                filterMatieresByFiliere();
+            } else if (isAdmin && branchSelect) {
+                // Reset to show all matieres when branch is reset
+                filterMatieresByFiliere();
+            }
+        }
         const professorId = document.getElementById('professorId');
         if (professorId) professorId.value = '';
+        const professorNom = document.getElementById('professorNom');
+        if (professorNom) professorNom.value = '';
         if (salleSelect) salleSelect.value = '';
         if (typeSeanceSelect) typeSeanceSelect.value = 'COURS';
-        if (branchSelect) branchSelect.value = '';
-        if (formFiliereId) formFiliereId.value = '';
+        // Pour coordinateur, réinitialiser avec la première filière
+        if (isCoordinateur && coordinateurFiliereId && formFiliereId) {
+            formFiliereId.value = coordinateurFiliereId;
+        } else if (isAdmin && branchSelect) {
+            branchSelect.value = '';
+            if (formFiliereId) formFiliereId.value = '';
+        }
+        if (isCoordinateur && coordinateurAnnee && formAnnee) {
+            formAnnee.value = coordinateurAnnee;
+        } else if (formAnnee) {
+            formAnnee.value = '1';
+        }
         if (formJourSemaine) formJourSemaine.value = '';
         if (formHeureDebut) formHeureDebut.value = '';
         if (formHeureFin) formHeureFin.value = '';
+        // Reset filiere for admin, keep for coordinateur
+        if (isAdmin && branchSelect) {
+            branchSelect.value = '';
+            if (formFiliereId) formFiliereId.value = '';
+        } else if (isCoordinateur && formFiliereId && selectedFiliereId) {
+            formFiliereId.value = selectedFiliereId;
+        }
     }
     
     // Prevent event bubbling for buttons inside table cells
@@ -937,15 +1051,77 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Filter matieres by selected filiere
+function filterMatieresByFiliere() {
+    const subjectSelect = document.getElementById('subjectSelect');
+    const branchSelect = document.getElementById('branchSelect');
+    
+    if (!subjectSelect || !allMatieres.length) return;
+    
+    // Get selected filiere ID
+    let targetFiliereId = null;
+    if (branchSelect && branchSelect.value) {
+        // Admin selected a filiere from dropdown
+        targetFiliereId = branchSelect.value;
+    } else if (isCoordinateur) {
+        // For coordinateurs, use the selected filiere from page filter or default
+        // Matieres are already filtered on server side, so show all available
+        targetFiliereId = coordinateurFiliereId;
+    }
+    
+    // Clear current options except the first one
+    subjectSelect.innerHTML = '<option value="">Sélectionner une matière</option>';
+    
+    // Filter and add matieres
+    allMatieres.forEach(matiere => {
+        // For coordinateurs, matieres are already filtered on server
+        // Just show all matieres that are in the allMatieres array
+        // For admins, filter by selected filiere from dropdown
+        if (isCoordinateur) {
+            // Show all matieres (already filtered on server by coordinateur's filieres)
+            const option = document.createElement('option');
+            option.value = matiere.value;
+            option.textContent = matiere.text;
+            option.setAttribute('data-filiere', matiere.filiereId);
+            option.setAttribute('data-prof', matiere.profId);
+            option.setAttribute('data-prof-nom', matiere.profNom);
+            subjectSelect.appendChild(option);
+        } else if (isAdmin) {
+            // For admins, filter by selected filiere
+            if (!targetFiliereId || matiere.filiereId === targetFiliereId) {
+                const option = document.createElement('option');
+                option.value = matiere.value;
+                option.textContent = matiere.text;
+                option.setAttribute('data-filiere', matiere.filiereId);
+                option.setAttribute('data-prof', matiere.profId);
+                option.setAttribute('data-prof-nom', matiere.profNom);
+                subjectSelect.appendChild(option);
+            }
+        }
+    });
+    
+    // Reset professor fields
+    const professorId = document.getElementById('professorId');
+    const professorNom = document.getElementById('professorNom');
+    if (professorId) professorId.value = '';
+    if (professorNom) professorNom.value = '';
+}
+
 function updateProfesseur() {
     const matiereSelect = document.getElementById('subjectSelect');
-    const professeurInput = document.getElementById('professorId');
-    if (matiereSelect && professeurInput) {
+    const professeurIdInput = document.getElementById('professorId');
+    const professeurNomInput = document.getElementById('professorNom');
+    
+    if (matiereSelect && professeurIdInput && professeurNomInput) {
         const selectedOption = matiereSelect.options[matiereSelect.selectedIndex];
         if (selectedOption && selectedOption.value) {
-            professeurInput.value = selectedOption.getAttribute('data-prof') || '';
+            const professeurId = selectedOption.getAttribute('data-prof') || '';
+            const professeurNom = selectedOption.getAttribute('data-prof-nom') || '';
+            professeurIdInput.value = professeurId;
+            professeurNomInput.value = professeurNom;
         } else {
-            professeurInput.value = '';
+            professeurIdInput.value = '';
+            professeurNomInput.value = '';
         }
     }
 }
