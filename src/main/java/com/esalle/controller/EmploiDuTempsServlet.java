@@ -512,11 +512,17 @@ public class EmploiDuTempsServlet extends HttpServlet {
                 }
             }
 
+            // Passer les paramètres de filière et année depuis la requête (pour les filtres)
+            String selectedFiliereIdStr = request.getParameter("filiereId");
+            String selectedAnneeStr = request.getParameter("annee");
+            
             request.setAttribute("filieres", filieres);
             request.setAttribute("salles", salles);
             request.setAttribute("matieres", matieres);
             request.setAttribute("professeurs", professeurs);
             request.setAttribute("isCoordinateur", currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR);
+            request.setAttribute("selectedFiliereId", selectedFiliereIdStr);
+            request.setAttribute("selectedAnnee", selectedAnneeStr);
             request.getRequestDispatcher("/WEB-INF/views/emploi/form.jsp").forward(request, response);
         }
 
@@ -538,7 +544,7 @@ public class EmploiDuTempsServlet extends HttpServlet {
                 Integer annee;
                 List<Filiere> coordinateurFilieres = null;
 
-                // Si c'est un coordinateur, déterminer automatiquement la filière et l'année
+                // Si c'est un coordinateur, déterminer la filière et l'année
                 if (currentUser != null && currentUser.getRole() == User.UserRole.COORDINATEUR) {
                     coordinateurFilieres = filiereService.getFilieresByCoordinateur(currentUser.getId());
                     if (coordinateurFilieres == null || coordinateurFilieres.isEmpty()) {
@@ -546,22 +552,42 @@ public class EmploiDuTempsServlet extends HttpServlet {
                         response.sendRedirect(request.getContextPath() + "/emploi/list");
                         return;
                     }
-                    // Utiliser la première filière du coordinateur
-                    filiereId = coordinateurFilieres.get(0).getId();
-                    // Pour l'année, on peut la déterminer à partir de la filière ou utiliser la matière
-                    // Si en mode édition, utiliser l'année de l'emploi existant
+                    
+                    // Si en mode édition, utiliser l'année et la filière de l'emploi existant
                     if (idStr != null && !idStr.isEmpty()) {
                         EmploiDuTemps existingEmploi = emploiService.getEmploiDuTempsById(Long.parseLong(idStr)).orElse(null);
                         if (existingEmploi != null) {
                             annee = existingEmploi.getAnnee();
                             filiereId = existingEmploi.getFiliereId();
                         } else {
-                            // Sinon utiliser l'année de la filière
-                            annee = coordinateurFilieres.get(0).getAnnee();
+                            // Sinon utiliser les paramètres du formulaire
+                            String filiereIdStr = request.getParameter("filiereId");
+                            String anneeStr = request.getParameter("annee");
+                            
+                            if (filiereIdStr == null || filiereIdStr.trim().isEmpty()) {
+                                throw new BusinessException("La filière est requise");
+                            }
+                            if (anneeStr == null || anneeStr.trim().isEmpty()) {
+                                throw new BusinessException("L'année est requise");
+                            }
+                            
+                            filiereId = Long.parseLong(filiereIdStr);
+                            annee = Integer.parseInt(anneeStr);
                         }
                     } else {
-                        // Mode création: utiliser l'année de la filière
-                        annee = coordinateurFilieres.get(0).getAnnee();
+                        // Mode création: utiliser les paramètres du formulaire
+                        String filiereIdStr = request.getParameter("filiereId");
+                        String anneeStr = request.getParameter("annee");
+                        
+                        if (filiereIdStr == null || filiereIdStr.trim().isEmpty()) {
+                            throw new BusinessException("La filière est requise");
+                        }
+                        if (anneeStr == null || anneeStr.trim().isEmpty()) {
+                            throw new BusinessException("L'année est requise");
+                        }
+                        
+                        filiereId = Long.parseLong(filiereIdStr);
+                        annee = Integer.parseInt(anneeStr);
                     }
                 } else {
                     // Admin: utiliser les paramètres du formulaire

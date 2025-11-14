@@ -24,48 +24,53 @@
             <form method="POST" action="${pageContext.request.contextPath}/emploi/save" 
                   class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-6">
                 
-                <!-- Filière et Année (masquées pour coordinateur, déterminées automatiquement) -->
+                <!-- Filière et Année -->
                 <c:choose>
-                    <c:when test="${isCoordinateur == true && not empty filieres}">
-                        <!-- Coordinateur: filière et année déterminées automatiquement -->
-                        <c:choose>
-                            <c:when test="${not empty emploi && not empty emploi.filiereId}">
-                                <!-- Mode édition: utiliser la filière et l'année de l'emploi -->
-                                <input type="hidden" name="filiereId" id="filiereId" value="${emploi.filiereId}">
-                                <input type="hidden" name="annee" id="annee" value="${emploi.annee}">
-                            </c:when>
-                            <c:otherwise>
-                                <!-- Mode création: utiliser la première filière disponible et son année -->
-                                <input type="hidden" name="filiereId" id="filiereId" value="${filieres[0].id}">
-                                <input type="hidden" name="annee" id="annee" value="${filieres[0].annee}">
-                            </c:otherwise>
-                        </c:choose>
+                    <c:when test="${not empty emploi && not empty emploi.filiereId}">
+                        <!-- Mode édition: utiliser la filière et l'année de l'emploi -->
+                        <input type="hidden" name="filiereId" id="filiereId" value="${emploi.filiereId}">
+                        <input type="hidden" name="annee" id="annee" value="${emploi.annee}">
                     </c:when>
                     <c:otherwise>
-                        <!-- Admin: afficher les champs filière et année -->
-                        <div>
-                            <label for="filiereId" class="block text-sm font-medium text-gray-700 mb-2">
-                                Filière <span class="text-red-500">*</span>
-                            </label>
-                            <select name="filiereId" id="filiereId" required onchange="updateMatieres()"
-                                    class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="">Sélectionner une filière</option>
-                                <c:forEach var="filiere" items="${filieres}">
-                                    <option value="${filiere.id}" ${not empty emploi && emploi.filiereId == filiere.id ? 'selected' : ''}>${filiere.nom} - ${filiere.cycle} ${filiere.annee}</option>
-                                </c:forEach>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="annee" class="block text-sm font-medium text-gray-700 mb-2">
-                                Année <span class="text-red-500">*</span>
-                            </label>
-                            <select name="annee" id="annee" required
-                                    class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="1" ${not empty emploi && emploi.annee == 1 ? 'selected' : ''}>Année 1</option>
-                                <option value="2" ${not empty emploi && emploi.annee == 2 ? 'selected' : ''}>Année 2</option>
-                                <option value="3" ${not empty emploi && emploi.annee == 3 ? 'selected' : ''}>Année 3</option>
-                            </select>
-                        </div>
+                        <!-- Mode création: utiliser les paramètres de la requête ou les valeurs par défaut -->
+                        <c:choose>
+                            <c:when test="${not empty selectedFiliereId && not empty selectedAnnee}">
+                                <!-- Utiliser les paramètres de filière et année depuis les filtres -->
+                                <input type="hidden" name="filiereId" id="filiereId" value="${selectedFiliereId}">
+                                <input type="hidden" name="annee" id="annee" value="${selectedAnnee}">
+                            </c:when>
+                            <c:when test="${isCoordinateur == true && not empty filieres}">
+                                <!-- Coordinateur: utiliser la première filière disponible et son année -->
+                                <input type="hidden" name="filiereId" id="filiereId" value="${filieres[0].id}">
+                                <input type="hidden" name="annee" id="annee" value="${filieres[0].annee}">
+                            </c:when>
+                            <c:otherwise>
+                                <!-- Admin: afficher les champs filière et année -->
+                                <div>
+                                    <label for="filiereId" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Filière <span class="text-red-500">*</span>
+                                    </label>
+                                    <select name="filiereId" id="filiereId" required onchange="updateMatieres()"
+                                            class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Sélectionner une filière</option>
+                                        <c:forEach var="filiere" items="${filieres}">
+                                            <option value="${filiere.id}" ${selectedFiliereId == filiere.id ? 'selected' : ''}>${filiere.nom} - ${filiere.cycle} ${filiere.annee}</option>
+                                        </c:forEach>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="annee" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Année <span class="text-red-500">*</span>
+                                    </label>
+                                    <select name="annee" id="annee" required
+                                            class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="1" ${selectedAnnee == '1' ? 'selected' : ''}>Année 1</option>
+                                        <option value="2" ${selectedAnnee == '2' ? 'selected' : ''}>Année 2</option>
+                                        <option value="3" ${selectedAnnee == '3' ? 'selected' : ''}>Année 3</option>
+                                    </select>
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
                     </c:otherwise>
                 </c:choose>
 
