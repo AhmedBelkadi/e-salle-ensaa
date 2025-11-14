@@ -5,11 +5,13 @@
 <hibernate-configuration>
     <session-factory>
         <!-- Database connection settings -->
-        <property name="hibernate.connection.driver_class">org.postgresql.Driver</property>
-        <!-- Use esalle_ensaa database as per docker-compose -->
-        <property name="hibernate.connection.url">jdbc:postgresql://postgres:5432/esalle_ensaa</property>
-        <property name="hibernate.connection.username">postgres</property>
-        <property name="hibernate.connection.password">password</property>
+        <property name="hibernate.connection.driver_class">${DB_Driver}</property>
+        <property name="hibernate.connection.url">${DB_HOST}</property>
+        <property name="hibernate.connection.username">${DB_USER}</property>
+        <property name="hibernate.connection.password">${DB_PASSWORD}</property>
+
+        <!-- Optional but recommended if Railway requires SSL -->
+        <property name="hibernate.connection.sslmode">require</property>
 
         <!-- JDBC connection pool settings -->
         <property name="hibernate.connection.pool_size">10</property>
