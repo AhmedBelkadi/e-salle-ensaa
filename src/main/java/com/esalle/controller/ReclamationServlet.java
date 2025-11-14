@@ -13,8 +13,6 @@ import com.esalle.service.ReclamationServiceImpl;
 import com.esalle.repository.SalleRepository;
 import com.esalle.repository.SalleRepositoryImpl;
 import com.esalle.exception.ApplicationException;
-import com.esalle.service.NotificationService;
-import com.esalle.service.NotificationServiceImpl;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -55,13 +53,11 @@ public class ReclamationServlet extends HttpServlet {
         ReclamationRepository reclamationRepository = new ReclamationRepositoryImpl();
         UserRepository userRepository = new UserRepositoryImpl();
         SalleRepository salleRepository = new SalleRepositoryImpl();
-        NotificationService notificationService = new NotificationServiceImpl();
         
         this.reclamationService = new ReclamationServiceImpl(
             reclamationRepository,
             userRepository,
-            salleRepository,
-            notificationService
+            salleRepository
         );
     }
 
@@ -225,7 +221,7 @@ public class ReclamationServlet extends HttpServlet {
             
             reclamationService.createReclamation(currentUser.getId(), salleId, description, urgence);
             
-            session.setAttribute("success", "Réclamation créée avec succès. L'administrateur a été notifié.");
+            session.setAttribute("success", "Réclamation créée avec succès.");
             response.sendRedirect(request.getContextPath() + "/reclamations/mes-reclamations");
 
         } catch (ApplicationException e) {
@@ -264,7 +260,7 @@ public class ReclamationServlet extends HttpServlet {
             
             reclamationService.traiterReclamation(reclamationId, currentUser.getId(), commentaire);
             
-            session.setAttribute("success", "Réclamation traitée avec succès. L'utilisateur a été notifié.");
+            session.setAttribute("success", "Réclamation traitée avec succès.");
             response.sendRedirect(request.getContextPath() + "/reclamations/list");
 
         } catch (ApplicationException e) {

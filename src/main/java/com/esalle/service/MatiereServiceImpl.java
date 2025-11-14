@@ -3,14 +3,16 @@ package com.esalle.service;
 import com.esalle.entity.Matiere;
 import com.esalle.entity.User;
 import com.esalle.entity.Filiere;
+import com.esalle.entity.EmploiDuTemps;
 import com.esalle.repository.MatiereRepository;
 import com.esalle.repository.MatiereRepositoryImpl;
 import com.esalle.repository.UserRepository;
 import com.esalle.repository.UserRepositoryImpl;
 import com.esalle.repository.FiliereRepository;
 import com.esalle.repository.FiliereRepositoryImpl;
+import com.esalle.repository.EmploiDuTempsRepository;
+import com.esalle.repository.EmploiDuTempsRepositoryImpl;
 import com.esalle.exception.BusinessException;
-import com.esalle.exception.NotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,11 +22,13 @@ public class MatiereServiceImpl implements MatiereService {
     private final MatiereRepository matiereRepository;
     private final UserRepository userRepository;
     private final FiliereRepository filiereRepository;
+    private final EmploiDuTempsRepository emploiDuTempsRepository;
 
     public MatiereServiceImpl() {
         this.matiereRepository = new MatiereRepositoryImpl();
         this.userRepository = new UserRepositoryImpl();
         this.filiereRepository = new FiliereRepositoryImpl();
+        this.emploiDuTempsRepository = new EmploiDuTempsRepositoryImpl();
     }
 
     @Override
@@ -49,6 +53,7 @@ public class MatiereServiceImpl implements MatiereService {
         matiere.setProfesseurNom(professeur.getNom() + " " + professeur.getPrenom());
 
         // Vérifier unicité (nom + filière)
+        String oldNom = null;
         if (matiere.getId() == null) {
             // Création
             if (matiereRepository.existsByNomAndFiliereId(matiere.getNom(), matiere.getFiliereId())) {
@@ -59,13 +64,22 @@ public class MatiereServiceImpl implements MatiereService {
             Matiere existing = matiereRepository.findById(matiere.getId())
                     .orElseThrow(() -> new BusinessException("Matière introuvable pour la modification."));
             
+            oldNom = existing.getNom(); // Sauvegarder l'ancien nom
+            
             if (!existing.getNom().equals(matiere.getNom()) && 
                 matiereRepository.existsByNomAndFiliereId(matiere.getNom(), matiere.getFiliereId())) {
                 throw new BusinessException("Une autre matière avec ce nom existe déjà pour cette filière.");
             }
         }
 
-        return matiereRepository.save(matiere);
+        Matiere savedMatiere = matiereRepository.save(matiere);
+        
+        // Si le nom a changé, mettre à jour tous les EmploiDuTemps associés
+        if (oldNom != null && !oldNom.equals(savedMatiere.getNom())) {
+            updateEmploiDuTempsMatiereNom(savedMatiere.getId(), savedMatiere.getNom());
+        }
+        
+        return savedMatiere;
     }
 
     @Override
@@ -110,6 +124,17 @@ public class MatiereServiceImpl implements MatiereService {
             return getAllMatieres();
         }
         return matiereRepository.searchByNom(keyword);
+    }
+    
+    /**
+     * Met à jour le nom de la matière dans tous les EmploiDuTemps associés
+     */
+    private void updateEmploiDuTempsMatiereNom(Long matiereId, String newMatiereNom) {
+        List<EmploiDuTemps> emplois = emploiDuTempsRepository.findByMatiereId(matiereId);
+        for (EmploiDuTemps emploi : emplois) {
+            emploi.setMatiereNom(newMatiereNom);
+            emploiDuTempsRepository.save(emploi);
+        }
     }
 }
 

@@ -565,8 +565,18 @@ public class EmploiDuTempsServlet extends HttpServlet {
                     }
                 } else {
                     // Admin: utiliser les paramètres du formulaire
-                    filiereId = Long.parseLong(request.getParameter("filiereId"));
-                    annee = Integer.parseInt(request.getParameter("annee"));
+                    String filiereIdStr = request.getParameter("filiereId");
+                    String anneeStr = request.getParameter("annee");
+                    
+                    if (filiereIdStr == null || filiereIdStr.trim().isEmpty()) {
+                        throw new BusinessException("La filière est requise");
+                    }
+                    if (anneeStr == null || anneeStr.trim().isEmpty()) {
+                        throw new BusinessException("L'année est requise");
+                    }
+                    
+                    filiereId = Long.parseLong(filiereIdStr);
+                    annee = Integer.parseInt(anneeStr);
                 }
 
                 // Créer des copies finales pour les lambdas
@@ -578,21 +588,50 @@ public class EmploiDuTempsServlet extends HttpServlet {
                             .anyMatch(f -> f.getId().equals(finalFiliereId));
 
                     if (!canAccess) {
-                        session.setAttribute("error", "Vous n'avez pas la permission de créer un emploi du temps pour cette filière.");
-                        response.sendRedirect(request.getContextPath() + "/emploi/list");
-                        return;
+                        throw new BusinessException("Vous n'avez pas la permission de créer un emploi du temps pour cette filière.");
                     }
                 }
 
+                // Validation et parsing des paramètres requis
+                String matiereIdStr = request.getParameter("matiereId");
+                String professeurIdStr = request.getParameter("professeurId");
+                String salleIdStr = request.getParameter("salleId");
+                String jourSemaineStr = request.getParameter("jourSemaine");
+                String heureDebutStr = request.getParameter("heureDebut");
+                String heureFinStr = request.getParameter("heureFin");
+                String typeSeanceStr = request.getParameter("typeSeance");
+                
+                if (matiereIdStr == null || matiereIdStr.trim().isEmpty()) {
+                    throw new BusinessException("La matière est requise");
+                }
+                if (professeurIdStr == null || professeurIdStr.trim().isEmpty()) {
+                    throw new BusinessException("Le professeur est requis");
+                }
+                if (salleIdStr == null || salleIdStr.trim().isEmpty()) {
+                    throw new BusinessException("La salle est requise");
+                }
+                if (jourSemaineStr == null || jourSemaineStr.trim().isEmpty()) {
+                    throw new BusinessException("Le jour de la semaine est requis");
+                }
+                if (heureDebutStr == null || heureDebutStr.trim().isEmpty()) {
+                    throw new BusinessException("L'heure de début est requise");
+                }
+                if (heureFinStr == null || heureFinStr.trim().isEmpty()) {
+                    throw new BusinessException("L'heure de fin est requise");
+                }
+                if (typeSeanceStr == null || typeSeanceStr.trim().isEmpty()) {
+                    throw new BusinessException("Le type de séance est requis");
+                }
+                
                 emploi.setFiliereId(filiereId);
                 emploi.setAnnee(annee);
-                emploi.setMatiereId(Long.parseLong(request.getParameter("matiereId")));
-                emploi.setProfesseurId(Long.parseLong(request.getParameter("professeurId")));
-                emploi.setSalleId(Long.parseLong(request.getParameter("salleId")));
-                emploi.setJourSemaine(EmploiDuTemps.JourSemaine.valueOf(request.getParameter("jourSemaine")));
-                emploi.setHeureDebut(LocalTime.parse(request.getParameter("heureDebut")));
-                emploi.setHeureFin(LocalTime.parse(request.getParameter("heureFin")));
-                emploi.setTypeSeance(EmploiDuTemps.TypeSeance.valueOf(request.getParameter("typeSeance")));
+                emploi.setMatiereId(Long.parseLong(matiereIdStr));
+                emploi.setProfesseurId(Long.parseLong(professeurIdStr));
+                emploi.setSalleId(Long.parseLong(salleIdStr));
+                emploi.setJourSemaine(EmploiDuTemps.JourSemaine.valueOf(jourSemaineStr));
+                emploi.setHeureDebut(LocalTime.parse(heureDebutStr));
+                emploi.setHeureFin(LocalTime.parse(heureFinStr));
+                emploi.setTypeSeance(EmploiDuTemps.TypeSeance.valueOf(typeSeanceStr));
 
                 String groupe = request.getParameter("groupe");
                 if (groupe != null && !groupe.trim().isEmpty()) {
@@ -601,10 +640,87 @@ public class EmploiDuTempsServlet extends HttpServlet {
 
                 emploiService.saveEmploiDuTemps(emploi);
 
+                // Check if it's an AJAX request
+                String requestedWith = request.getHeader("X-Requested-With");
+                if ("XMLHttpRequest".equals(requestedWith)) {
+                    // Return JSON success response for AJAX
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write("{\"success\": true, \"message\": \"Séance créée avec succès\"}");
+                    return;
+                }
+                
                 session.setAttribute("success", "Séance créée avec succès");
                 response.sendRedirect(request.getContextPath() + "/emploi/list?success=saved");
             } catch (BusinessException e) {
+                // Log the exception for debugging
+                log("BusinessException in handleSave: " + e.getMessage(), e);
+                
+                // Check if it's an AJAX request
+                String requestedWith = request.getHeader("X-Requested-With");
+                if ("XMLHttpRequest".equals(requestedWith)) {
+                    // Return JSON error response for AJAX
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    String errorMsg = e.getMessage() != null ? e.getMessage() : "Une erreur métier est survenue";
+                    response.getWriter().write("{\"error\": \"" + errorMsg.replace("\"", "\\\"").replace("\n", " ") + "\"}");
+                    response.getWriter().flush();
+                    return;
+                }
+                
+                // Fallback for non-AJAX requests
                 request.setAttribute("error", e.getMessage());
+                handleNew(request, response);
+            } catch (NumberFormatException e) {
+                // Check if it's an AJAX request
+                String requestedWith = request.getHeader("X-Requested-With");
+                if ("XMLHttpRequest".equals(requestedWith)) {
+                    // Return JSON error response for AJAX
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"error\": \"Format de données invalide: " + e.getMessage().replace("\"", "\\\"") + "\"}");
+                    return;
+                }
+                
+                // Fallback for non-AJAX requests
+                request.setAttribute("error", "Erreur de format: " + e.getMessage());
+                handleNew(request, response);
+            } catch (IllegalArgumentException e) {
+                // Check if it's an AJAX request
+                String requestedWith = request.getHeader("X-Requested-With");
+                if ("XMLHttpRequest".equals(requestedWith)) {
+                    // Return JSON error response for AJAX
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("{\"error\": \"" + e.getMessage().replace("\"", "\\\"") + "\"}");
+                    return;
+                }
+                
+                // Fallback for non-AJAX requests
+                request.setAttribute("error", "Erreur: " + e.getMessage());
+                handleNew(request, response);
+            } catch (Exception e) {
+                // Log the full exception for debugging
+                log("Error in handleSave", e);
+                e.printStackTrace();
+                
+                // Check if it's an AJAX request
+                String requestedWith = request.getHeader("X-Requested-With");
+                if ("XMLHttpRequest".equals(requestedWith)) {
+                    // Return JSON error response for AJAX
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    String errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+                    response.getWriter().write("{\"error\": \"Une erreur est survenue: " + errorMsg.replace("\"", "\\\"").replace("\n", " ") + "\"}");
+                    return;
+                }
+                
+                // Fallback for non-AJAX requests
+                request.setAttribute("error", "Erreur: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName()));
                 handleNew(request, response);
             }
         }

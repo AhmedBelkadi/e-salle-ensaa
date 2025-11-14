@@ -211,6 +211,9 @@
                 </c:choose>
             </div>
         </div>
+        
+        <!-- Pagination -->
+        <jsp:include page="../common/pagination.jsp"/>
     </div>
 </div>
 

@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${param.title != null ? param.title : 'E-Salle ENSAA'}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/output.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-50 min-h-screen flex">
@@ -239,12 +239,6 @@
 
             <div class="flex items-center gap-4">
                 <c:if test="${not empty sessionScope.user}">
-                    <!-- Notification Bell (placeholder) -->
-                    <button class="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition">
-                        <i class="fas fa-bell w-5 h-5"></i>
-                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                    </button>
-
                     <!-- User Avatar -->
                     <div class="w-10 h-10 bg-blue-600 border border-gray-300 rounded-full flex items-center justify-center">
                         <span class="text-white font-semibold">${sessionScope.user.nom.substring(0, 1)}${sessionScope.user.prenom.substring(0, 1)}</span>

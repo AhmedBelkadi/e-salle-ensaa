@@ -3,6 +3,7 @@ package com.esalle.controller;
 import com.esalle.entity.Salle;
 import com.esalle.service.SalleService;
 import com.esalle.service.SalleServiceImpl;
+import com.esalle.util.PaginationHelper;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -100,6 +101,25 @@ public class SalleServlet extends HttpServlet {
         String typeFilter = request.getParameter("type");
         String disponibleFilter = request.getParameter("disponible");
         String capaciteMinStr = request.getParameter("capaciteMin");
+        String search = request.getParameter("search");
+        
+        // Pagination parameters
+        int page = 0;
+        int pageSize = 12; // Default page size
+        try {
+            String pageParam = request.getParameter("page");
+            if (pageParam != null && !pageParam.isEmpty()) {
+                page = Integer.parseInt(pageParam);
+                if (page < 0) page = 0;
+            }
+            String sizeParam = request.getParameter("size");
+            if (sizeParam != null && !sizeParam.isEmpty()) {
+                pageSize = Integer.parseInt(sizeParam);
+                if (pageSize < 1) pageSize = 12;
+            }
+        } catch (NumberFormatException e) {
+            log("Invalid pagination parameters");
+        }
         
         // Convertir les filtres
         Salle.TypeSalle type = null;
@@ -122,12 +142,30 @@ public class SalleServlet extends HttpServlet {
         }
         
         // Utiliser la méthode filterSalles du service
-        List<Salle> salles = salleService.filterSalles(type, capaciteMin, disponible, null);
+        List<Salle> allSalles = salleService.filterSalles(type, capaciteMin, disponible, search);
         
+        // Paginate results
+        List<Salle> salles = PaginationHelper.paginate(allSalles, page, pageSize);
+        int totalPages = PaginationHelper.getTotalPages(allSalles.size(), pageSize);
+        int startIndex = PaginationHelper.getStartIndex(page, pageSize);
+        int endIndex = PaginationHelper.getEndIndex(page, pageSize, allSalles.size());
+        
+        // Set attributes
         request.setAttribute("salles", salles);
         request.setAttribute("typeFilter", typeFilter);
         request.setAttribute("disponibleFilter", disponibleFilter);
         request.setAttribute("capaciteMin", capaciteMinStr);
+        request.setAttribute("search", search);
+        
+        // Pagination attributes
+        request.setAttribute("currentPage", page);
+        request.setAttribute("pageSize", pageSize);
+        request.setAttribute("totalItems", allSalles.size());
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("startIndex", startIndex);
+        request.setAttribute("endIndex", endIndex);
+        request.setAttribute("hasNextPage", PaginationHelper.hasNextPage(page, totalPages));
+        request.setAttribute("hasPreviousPage", PaginationHelper.hasPreviousPage(page));
         
         request.getRequestDispatcher("/WEB-INF/views/salle/list.jsp").forward(request, response);
     }

@@ -1,8 +1,11 @@
 package com.esalle.service;
 
 import com.esalle.entity.User;
+import com.esalle.entity.EmploiDuTemps;
 import com.esalle.repository.UserRepository;
 import com.esalle.repository.UserRepositoryImpl;
+import com.esalle.repository.EmploiDuTempsRepository;
+import com.esalle.repository.EmploiDuTempsRepositoryImpl;
 import com.esalle.exception.BusinessException;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -13,11 +16,11 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
     
     private final UserRepository userRepository;
-    private final NotificationServiceImpl notificationService;
+    private final EmploiDuTempsRepository emploiDuTempsRepository;
     
     public UserServiceImpl() {
         this.userRepository = new UserRepositoryImpl();
-        this.notificationService = new NotificationServiceImpl();
+        this.emploiDuTempsRepository = new EmploiDuTempsRepositoryImpl();
     }
     
     @Override
@@ -45,26 +48,6 @@ public class UserServiceImpl implements UserService {
         }
         
         User savedUser = userRepository.save(user);
-        
-        // Envoyer notification à l'admin (sauf pour MEMBRE_CLUB auto-validé)
-        if (savedUser.getStatut() == User.UserStatus.EN_ATTENTE) {
-            String userName = savedUser.getPrenom() + " " + savedUser.getNom();
-            String userRole = savedUser.getRole().toString();
-            notificationService.notifyAdminNewRegistration(
-                "admin@ensaa.ma", 
-                "+212600000000", // Numéro WhatsApp admin (à configurer)
-                userName, 
-                userRole
-            );
-        } else if (savedUser.getRole() == User.UserRole.MEMBRE_CLUB) {
-            // Notifier le membre de club de son auto-validation
-            String userName = savedUser.getPrenom() + " " + savedUser.getNom();
-            notificationService.notifyUserAccountApproved(
-                savedUser.getEmail(),
-                savedUser.getTelephone(),
-                userName
-            );
-        }
         
         return savedUser;
     }
@@ -150,14 +133,6 @@ public class UserServiceImpl implements UserService {
         
         User updatedUser = userRepository.save(user);
         
-        // Envoyer notification au user
-        String userName = updatedUser.getPrenom() + " " + updatedUser.getNom();
-        notificationService.notifyUserAccountApproved(
-            updatedUser.getEmail(),
-            updatedUser.getTelephone(),
-            userName
-        );
-        
         return updatedUser;
     }
     
@@ -171,14 +146,6 @@ public class UserServiceImpl implements UserService {
         user.setApprovedBy(refusedBy);
         
         User updatedUser = userRepository.save(user);
-        
-        // Envoyer notification au user
-        String userName = updatedUser.getPrenom() + " " + updatedUser.getNom();
-        notificationService.notifyUserAccountRefused(
-            updatedUser.getEmail(),
-            updatedUser.getTelephone(),
-            userName
-        );
         
         return updatedUser;
     }
@@ -195,7 +162,33 @@ public class UserServiceImpl implements UserService {
     
     @Override
     public User update(User user) {
-        return userRepository.save(user);
+        // Sauvegarder l'ancien nom et prénom si c'est une modification
+        String oldNom = null;
+        String oldPrenom = null;
+        if (user.getId() != null) {
+            Optional<User> existingOpt = userRepository.findById(user.getId());
+            if (existingOpt.isPresent()) {
+                User existing = existingOpt.get();
+                oldNom = existing.getNom();
+                oldPrenom = existing.getPrenom();
+            }
+        }
+        
+        User savedUser = userRepository.save(user);
+        
+        // Si le nom ou le prénom a changé, mettre à jour tous les EmploiDuTemps associés
+        // (seulement pour les utilisateurs qui sont professeurs ou coordinateurs)
+        if (oldNom != null && oldPrenom != null && 
+            (savedUser.getRole() == User.UserRole.PROFESSEUR || savedUser.getRole() == User.UserRole.COORDINATEUR)) {
+            String oldFullName = oldNom + " " + oldPrenom;
+            String newFullName = savedUser.getNom() + " " + savedUser.getPrenom();
+            
+            if (!oldFullName.equals(newFullName)) {
+                updateEmploiDuTempsProfesseurNom(savedUser.getId(), newFullName);
+            }
+        }
+        
+        return savedUser;
     }
     
     @Override
@@ -210,6 +203,17 @@ public class UserServiceImpl implements UserService {
     
     private boolean checkPassword(String raw, String hashed) {
         return BCrypt.checkpw(raw, hashed);
+    }
+    
+    /**
+     * Met à jour le nom du professeur dans tous les EmploiDuTemps associés
+     */
+    private void updateEmploiDuTempsProfesseurNom(Long professeurId, String newProfesseurNom) {
+        List<EmploiDuTemps> emplois = emploiDuTempsRepository.findByProfesseurId(professeurId);
+        for (EmploiDuTemps emploi : emplois) {
+            emploi.setProfesseurNom(newProfesseurNom);
+            emploiDuTempsRepository.save(emploi);
+        }
     }
 }
 

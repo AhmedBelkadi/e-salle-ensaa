@@ -1,0 +1,13 @@
+{
+  "name": "e-salle-ensaa",
+  "version": "1.0.0",
+  "description": "E-Salle ENSAA - Room Management System",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/main/webapp/css/input.css -o ./src/main/webapp/css/output.css --minify",
+    "watch:css": "tailwindcss -i ./src/main/webapp/css/input.css -o ./src/main/webapp/css/output.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}
+

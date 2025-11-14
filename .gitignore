@@ -79,5 +79,9 @@ application-local.properties
 *.ods
 
 # hibernate
-hibernate.cfg.xml
+src/main/resources/hibernate.cfg.xml
 *.tex
+
+# Node.js
+node_modules/
+package-lock.json

@@ -24,7 +24,9 @@
         <property name="hibernate.format_sql">true</property>
         <property name="hibernate.use_sql_comments">false</property>
 
-        <!-- Drop and re-create the database schema on startup -->
+        <!-- Database schema management -->
+        <!-- Options: update (development) | validate (production) | create | create-drop -->
+        <!-- Can be overridden by HIBERNATE_DDL_AUTO environment variable -->
         <property name="hibernate.hbm2ddl.auto">update</property>
 
         <!-- Current Session Context -->

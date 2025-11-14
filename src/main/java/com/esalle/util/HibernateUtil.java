@@ -1,10 +1,6 @@
 package com.esalle.util;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
 import java.util.logging.Logger;
 
@@ -51,30 +47,12 @@ public class HibernateUtil {
             try {
                 LOGGER.info("🔧 Initializing Hibernate SessionFactory...");
                 
-                // Create registry
-                StandardServiceRegistry registry = new StandardServiceRegistryBuilder()
-                        .configure() // Load hibernate.cfg.xml from classpath
-                        .build();
+                // Use HibernateConfigLoader to support environment variables
+                sessionFactory = HibernateConfigLoader.buildSessionFactory();
                 
-                try {
-                    // Create MetadataSources
-                    MetadataSources sources = new MetadataSources(registry);
-                    
-                    // Build Metadata
-                    Metadata metadata = sources.getMetadataBuilder().build();
-                    
-                    // Build SessionFactory
-                    sessionFactory = metadata.getSessionFactoryBuilder().build();
-                    
-                    LOGGER.info("✅ Hibernate SessionFactory initialized successfully");
-                    
-                    return sessionFactory;
-                    
-                } catch (Exception e) {
-                    // Destroy registry if SessionFactory creation fails
-                    StandardServiceRegistryBuilder.destroy(registry);
-                    throw e;
-                }
+                LOGGER.info("✅ Hibernate SessionFactory initialized successfully");
+                
+                return sessionFactory;
                 
             } catch (Exception e) {
                 LOGGER.severe("❌ Failed to create SessionFactory: " + e.getMessage());
