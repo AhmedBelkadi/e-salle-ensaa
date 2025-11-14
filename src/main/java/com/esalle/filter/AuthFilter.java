@@ -30,10 +30,7 @@ public class AuthFilter implements Filter {
         "/favicon.ico"
     );
 
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-        // Initialisation si nécessaire
-    }
+
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -91,10 +88,7 @@ public class AuthFilter implements Filter {
         chain.doFilter(request, response);
     }
 
-    @Override
-    public void destroy() {
-        // Nettoyage si nécessaire
-    }
+
 
     /**
      * Vérifie si l'URL est publique (accessible sans authentification)
