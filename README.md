@@ -189,19 +189,21 @@ cp .env.example .env
 **Variables importantes :**
 
 ```env
-# Database
-POSTGRES_DB=esalle_ensaa
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=<strong_password>
+# Database Configuration
+DB_NAME=esalle_ensaa
+DB_USER=postgres
+DB_PASSWORD=your_secure_password_here
+DB_PORT=5432
 
-# Application
-DB_URL=jdbc:postgresql://postgres:5432/esalle_ensaa
-DB_USERNAME=postgres
-DB_PASSWORD=<strong_password>
+# Application Configuration
+APP_PORT=8080
+TIMEZONE=Europe/Paris
 
 # Hibernate (update pour dev, validate pour prod)
 HIBERNATE_DDL_AUTO=update
 ```
+
+**Note :** Pour Docker, les variables `POSTGRES_DB`, `POSTGRES_USER`, et `POSTGRES_PASSWORD` sont également utilisées par le conteneur PostgreSQL.
 
 ### Configuration Hibernate
 
@@ -357,24 +359,14 @@ my-webapp/
 
 ## 📚 Documentation
 
-### Documentation Technique
+### Documentation Disponible
 
-- **`CODE_REVIEW.md`** - Revue de code complète
-- **`IMPROVEMENT_PLAN.md`** - Plan d'amélioration
-- **`DEPLOYMENT.md`** - Guide de déploiement
-- **`BUILD_TAILWIND.md`** - Instructions pour builder Tailwind CSS
-- **`docker/nginx/README.md`** - Documentation Nginx
-
-### Guides de Setup
-
-- **`SETUP_PHASE1.md`** - Setup Phase 1 (Sécurité)
-- **`QUICK_START_TAILWIND.md`** - Quick start Tailwind
-
-### Résumés d'Implémentation
-
-- **`PHASE1_IMPLEMENTATION_SUMMARY.md`** - Phase 1 (Sécurité)
-- **`PHASE2_IMPLEMENTATION_SUMMARY.md`** - Phase 2 (Configuration)
-- **`PHASE4_IMPLEMENTATION_SUMMARY.md`** - Phase 4 (Performance)
+- **`docker/nginx/README.md`** - Documentation Nginx et configuration SSL
+- **`README.md`** - Ce fichier (documentation principale)
+- **Diagrammes PlantUML** - Disponibles dans le dossier `diagrams/` :
+  - Diagrammes de cas d'utilisation (Use Case)
+  - Diagramme de classes UML
+  - Diagrammes d'architecture
 
 ---
 
@@ -392,11 +384,12 @@ my-webapp/
 
 ### Configuration de Production
 
-Pour la production, suivre le guide `DEPLOYMENT.md` qui inclut :
-- Configuration de variables d'environnement sécurisées
-- Certificats SSL/TLS de production
+Pour la production, suivre ces recommandations :
+- Configuration de variables d'environnement sécurisées dans `.env`
+- Certificats SSL/TLS de production (voir `docker/nginx/ssl/README.md`)
 - Configuration Hibernate en mode `validate`
 - Backup automatique de la base de données
+- Utiliser `docker-compose.prod.yml` pour la configuration de production
 
 ---
 
@@ -499,9 +492,10 @@ docker-compose up -d
 
 Pour toute question ou problème :
 
-1. Consulter la documentation dans le dossier `documents/`
+1. Consulter ce README et la documentation dans `docker/nginx/README.md`
 2. Vérifier les issues sur GitHub
-3. Contacter l'équipe de développement
+3. Consulter les diagrammes PlantUML dans le dossier `diagrams/`
+4. Contacter l'équipe de développement
 
 ---
 
@@ -520,16 +514,4 @@ Ce projet est développé dans le cadre d'un projet académique pour l'ENSAA.
 **Établissement** : ENSA Agadir  
 **Année académique** : 2025-2026
 
----
-
-## 🚀 Prochaines Étapes
-
-- [ ] Ajouter tests unitaires (Phase 3)
-- [ ] Implémenter cache (Phase 4.3)
-- [ ] Ajouter CI/CD pipeline (Phase 5.3)
-- [ ] Améliorer la recherche avancée
-- [ ] Ajouter export PDF/Excel
-
----
-
-**Dernière mise à jour** : 7 Novembre 2025
+**Dernière mise à jour** : Novembre 2025
