@@ -2,8 +2,11 @@ package com.esalle.service;
 
 import com.esalle.entity.Salle;
 import com.esalle.entity.Salle.TypeSalle;
+import com.esalle.entity.EmploiDuTemps;
 import com.esalle.repository.SalleRepository;
 import com.esalle.repository.SalleRepositoryImpl;
+import com.esalle.repository.EmploiDuTempsRepository;
+import com.esalle.repository.EmploiDuTempsRepositoryImpl;
 import com.esalle.exception.BusinessException;
 
 import java.time.LocalDateTime;
@@ -14,13 +17,16 @@ import java.util.stream.Collectors;
 public class SalleServiceImpl implements SalleService {
 
     private final SalleRepository salleRepository;
+    private final EmploiDuTempsRepository emploiDuTempsRepository;
 
     public SalleServiceImpl() {
         this.salleRepository = new SalleRepositoryImpl();
+        this.emploiDuTempsRepository = new EmploiDuTempsRepositoryImpl();
     }
 
     @Override
     public Salle saveSalle(Salle salle) {
+        String oldNom = null;
         if (salle.getId() == null) {
             // Création
             if (salleRepository.existsByNom(salle.getNom())) {
@@ -32,6 +38,8 @@ public class SalleServiceImpl implements SalleService {
             Salle existingSalle = salleRepository.findById(salle.getId())
                     .orElseThrow(() -> new BusinessException("Salle introuvable pour la modification."));
 
+            oldNom = existingSalle.getNom(); // Sauvegarder l'ancien nom
+
             if (!existingSalle.getNom().equals(salle.getNom()) && salleRepository.existsByNom(salle.getNom())) {
                 throw new BusinessException("Une autre salle avec ce nom existe déjà.");
             }
@@ -39,7 +47,14 @@ public class SalleServiceImpl implements SalleService {
         }
 
         salle.setDateModification(LocalDateTime.now());
-        return salleRepository.save(salle);
+        Salle savedSalle = salleRepository.save(salle);
+        
+        // Si le nom a changé, mettre à jour tous les EmploiDuTemps associés
+        if (oldNom != null && !oldNom.equals(savedSalle.getNom())) {
+            updateEmploiDuTempsSalleNom(savedSalle.getId(), savedSalle.getNom());
+        }
+        
+        return savedSalle;
     }
 
     @Override
@@ -79,6 +94,17 @@ public class SalleServiceImpl implements SalleService {
         salle.setDisponible(!salle.isDisponible());
         salle.setDateModification(LocalDateTime.now());
         return salleRepository.save(salle);
+    }
+    
+    /**
+     * Met à jour le nom de la salle dans tous les EmploiDuTemps associés
+     */
+    private void updateEmploiDuTempsSalleNom(Long salleId, String newSalleNom) {
+        List<EmploiDuTemps> emplois = emploiDuTempsRepository.findBySalleId(salleId);
+        for (EmploiDuTemps emploi : emplois) {
+            emploi.setSalleNom(newSalleNom);
+            emploiDuTempsRepository.save(emploi);
+        }
     }
 }
 

@@ -4,9 +4,12 @@ import com.esalle.entity.User;
 import com.esalle.repository.UserRepository;
 import com.esalle.entity.Filiere;
 import com.esalle.entity.Filiere.Cycle;
+import com.esalle.entity.EmploiDuTemps;
 import com.esalle.repository.FiliereRepository;
 import com.esalle.repository.FiliereRepositoryImpl;
 import com.esalle.repository.UserRepositoryImpl;
+import com.esalle.repository.EmploiDuTempsRepository;
+import com.esalle.repository.EmploiDuTempsRepositoryImpl;
 import com.esalle.exception.BusinessException;
 import com.esalle.exception.NotFoundException;
 
@@ -19,15 +22,18 @@ public class FiliereServiceImpl implements FiliereService {
 
     private final FiliereRepository filiereRepository;
     private final UserRepository userRepository;
+    private final EmploiDuTempsRepository emploiDuTempsRepository;
 
     public FiliereServiceImpl() {
         this.filiereRepository = new FiliereRepositoryImpl();
         this.userRepository = new UserRepositoryImpl();
+        this.emploiDuTempsRepository = new EmploiDuTempsRepositoryImpl();
     }
 
     public FiliereServiceImpl(FiliereRepository filiereRepository, UserRepository userRepository) {
         this.filiereRepository = filiereRepository;
         this.userRepository = userRepository;
+        this.emploiDuTempsRepository = new EmploiDuTempsRepositoryImpl();
     }
 
     @Override
@@ -140,7 +146,24 @@ public class FiliereServiceImpl implements FiliereService {
             filiere.setCoordinateurNom(coordinateur.getNom() + " " + coordinateur.getPrenom());
         }
 
-        return filiereRepository.save(filiere);
+        // Sauvegarder l'ancien nom si c'est une modification
+        String oldNom = null;
+        if (filiere.getId() != null) {
+            Filiere existing = filiereRepository.findById(filiere.getId())
+                .orElse(null);
+            if (existing != null) {
+                oldNom = existing.getNom();
+            }
+        }
+
+        Filiere savedFiliere = filiereRepository.save(filiere);
+        
+        // Si le nom a changé, mettre à jour tous les EmploiDuTemps associés
+        if (oldNom != null && !oldNom.equals(savedFiliere.getNom())) {
+            updateEmploiDuTempsFiliereNom(savedFiliere.getId(), savedFiliere.getNom());
+        }
+        
+        return savedFiliere;
     }
 
     @Override
@@ -210,8 +233,16 @@ public class FiliereServiceImpl implements FiliereService {
 
     @Override
     public void deleteFiliere(Long id) {
+        if (id == null) {
+            throw new BusinessException("L'ID de la filière est obligatoire");
+        }
         Filiere filiere = getFiliereById(id);
-        filiereRepository.deleteById(id);
+        if (filiere != null && filiere.hasCoordinateur()) {
+            removeCoordinateur(filiere.getId());
+        }
+        if (filiere != null) {
+            filiereRepository.deleteById(id);
+        }
     }
 
     @Override
@@ -245,6 +276,17 @@ public class FiliereServiceImpl implements FiliereService {
             throw new BusinessException("Le nom est obligatoire");
         }
         return filiereRepository.findByNomExact(nom.trim());
+    }
+    
+    /**
+     * Met à jour le nom de la filière dans tous les EmploiDuTemps associés
+     */
+    private void updateEmploiDuTempsFiliereNom(Long filiereId, String newFiliereNom) {
+        List<EmploiDuTemps> emplois = emploiDuTempsRepository.findByFiliereId(filiereId);
+        for (EmploiDuTemps emploi : emplois) {
+            emploi.setFiliereNom(newFiliereNom);
+            emploiDuTempsRepository.save(emploi);
+        }
     }
 }
 
